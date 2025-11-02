@@ -1,0 +1,622 @@
+---
+title: "biniLasso vignette"
+author: "Abdollah Safari"
+format: html
+editor: visual
+quarto-quiet: true
+editor_options: 
+  chunk_output_type: console
+---
+
+## Introduction
+
+The biniLasso and its sparse variant, miniLasso, are novel methods for prognostic analysis of high-dimensional survival data that enable detection of multiple cut-points per continuous feature to categorize them for obtaining more interpretable results from prediction models. This approach leverages the Cox proportional hazards model with two key innovations: (1) a cumulative binarization scheme with L1-penalized coefficients operating on context-dependent cut-point candidates, and (2) for miniLasso, additional uniLasso regularization, a recently developed two-stage regularized regression, to enforce sparsity while preserving univariate coefficient patterns. For details, see the original paper by Safari et al. available at https://arxiv.org/abs/2503.16687 .
+
+## Initial setup
+
+```{r, include=FALSE}
+library(tidyverse)
+library(magrittr)
+library(survival)
+library(glmnet)
+library(pec)
+library(uniLasso)
+library(kableExtra)
+library(remotes)
+remotes::install_github("ab-sa/biniLasso", force = TRUE)
+library(biniLasso)
+
+cuts_to_list <-
+  function(cuts_str = cuts_betas_org$cut_points_x[2]) {
+    cuts_str <- strsplit(cuts_str, split = "array")[[1]][-1]
+    lapply(cuts_str, function(x) {
+      x_tmp <- strsplit(x, split = ",")[[1]][-1]
+      if (any(grepl(":", x_tmp))) x_tmp <- x_tmp[-c(length(x_tmp) - 1, length(x_tmp))]
+      else x_tmp <- x_tmp[-c(length(x_tmp))]
+      x_tmp <- as.numeric(trimws(x_tmp))
+    })
+  }
+
+
+```
+
+```{r}
+library(tidyverse)
+library(magrittr)
+library(survival)
+library(glmnet)
+library(pec)
+library(uniLasso)
+library(kableExtra)
+library(biniLasso)
+
+# source("functions.R")
+
+gbm_data_fnl <- read_rds("data/gbm_fnl.rds")
+brca_data_fnl <- read_rds("data/brca_fnl.rds")
+kirc_data_fnl <- read_rds("data/kirc_fnl.rds")
+
+colnames(gbm_data_fnl) <-
+  stringr::str_replace_all(colnames(gbm_data_fnl), "-", "_")
+colnames(brca_data_fnl) <-
+  stringr::str_replace_all(colnames(brca_data_fnl), "-", "_")
+colnames(kirc_data_fnl) <-
+  stringr::str_replace_all(colnames(kirc_data_fnl), "-", "_")
+
+
+bussy_est <- read.csv("data/binacox_tcga_cuts.csv",
+                      header = TRUE, row.names = NULL)
+Bussy_cuts <-
+  bussy_est[-1, ] %>%
+  select(data, cut_points_estimate_x) %>%
+  rowwise %>%
+  mutate(opt_cuts_bina = list(cuts_to_list(cut_points_estimate_x))) %>%
+  select(data, opt_cuts_bina) %>%
+  ungroup
+  
+names(Bussy_cuts$opt_cuts_bina[Bussy_cuts$data == "GBM"][[1]]) <-
+  colnames(gbm_data_fnl)[! colnames(gbm_data_fnl) %in% c("barcode", "vital_status", "tte")]
+names(Bussy_cuts$opt_cuts_bina[Bussy_cuts$data == "KIRC"][[1]]) <-
+  colnames(kirc_data_fnl)[! colnames(kirc_data_fnl) %in% c("barcode", "vital_status", "tte")]
+names(Bussy_cuts$opt_cuts_bina[Bussy_cuts$data == "BRCA"][[1]]) <-
+  colnames(brca_data_fnl)[! colnames(brca_data_fnl) %in% c("barcode", "vital_status", "tte")]
+
+n_bins <- 50
+set.seed(12345)
+
+```
+
+## Data preproccessing and extract candidate cut-points
+
+Before fitting the model to extract optimal cut-points, one needs to specify cut-points candidates. We will do this by using the $num_to_cat$ function. This can be done either by simply specifying number of bins for numeric covariates (set $n_bins$ argument), or more explicitly, passing the candidate cut-points per covariate by setting the cuts_list argument (see function help for more details and a simple example). Here, we use the former and set the number of bins to 50 for all genes.
+
+```{r, warning=FALSE, message=FALSE}
+gbm_converted_obj <-
+  cumBinarizer(data = gbm_data_fnl,
+               cols = colnames(gbm_data_fnl)[! colnames(gbm_data_fnl) %in%
+                                             c("barcode", "vital_status", "tte")],
+               method = "quantile",
+               n_bins = 50)
+brca_converted_obj <-
+  cumBinarizer(data = brca_data_fnl,
+             cols = colnames(brca_data_fnl)[! colnames(brca_data_fnl) %in%
+                                             c("barcode", "vital_status", "tte")],
+             method = "quantile",
+             n_bins = 50)
+kirc_converted_obj <-
+  cumBinarizer(data = kirc_data_fnl,
+             cols = colnames(kirc_data_fnl)[! colnames(kirc_data_fnl) %in%
+                                             c("barcode", "vital_status", "tte")],
+             method = "quantile",
+             n_bins = 50)
+```
+
+Candidate cut-points for the first gene (COPS7B) in the GBM dataset:
+
+```{r}
+gbm_converted_obj$x_cuts[[1]][[1]]
+```
+
+Candidate cut-points for the second gene (CYP3A7_CYP3A51P) in the GBM dataset:
+
+```{r}
+gbm_converted_obj$x_cuts[[1]][[2]]
+```
+
+As it can be seen, the first gene has 50 candidate cut-points as it was indicated in the input arguments of the cumBinarizer function. However, for the second gene, due to limited number of unique values in the gene expression data in the given gene, the function returns only 37 candidate cut-points, and therefore, the counts of different levels of the resulting categorical variables after categorization will be unbalanced.
+
+## Obtain optimal cut-points
+
+```{r, warning=FALSE, message=FALSE}
+gbm_cuts_comp <-
+  opt_cuts_finder(x = gbm_converted_obj$x,
+                  y = survival::Surv(gbm_data_fnl$tte, gbm_data_fnl$vital_status),
+                  method = "both",
+                  family = "cox",
+                  lasso_rule = "min",
+                  lasso_nfolds = 10,
+                  cols = colnames(gbm_data_fnl)[! colnames(gbm_data_fnl) %in%
+                                                  c("barcode", "vital_status", "tte")],
+                  x_cuts = gbm_converted_obj$x_cuts)
+brca_cuts_comp <-
+  opt_cuts_finder(x = brca_converted_obj$x,
+                  y = survival::Surv(brca_data_fnl$tte, brca_data_fnl$vital_status),
+                  method = "both",
+                  family = "cox",
+                  lasso_rule = "min",
+                  lasso_nfolds = 10,
+                  cols = colnames(brca_data_fnl)[! colnames(brca_data_fnl) %in%
+                                                  c("barcode", "vital_status", "tte")],
+                  x_cuts = brca_converted_obj$x_cuts)
+kirc_cuts_comp <-
+  opt_cuts_finder(x = kirc_converted_obj$x,
+                  y = survival::Surv(kirc_data_fnl$tte, kirc_data_fnl$vital_status),
+                  method = "both",
+                  family = "cox",
+                  lasso_rule = "min",
+                  lasso_nfolds = 10,
+                  cols = colnames(kirc_data_fnl)[! colnames(kirc_data_fnl) %in%
+                                                  c("barcode", "vital_status", "tte")],
+                  x_cuts = kirc_converted_obj$x_cuts)
+
+Bussy_cuts$opt_cuts <-
+  gbm_cuts_comp$opt_cuts[gbm_cuts_comp$method == "biniLasso"]
+Bussy_cuts$opt_cuts[2] <-
+  brca_cuts_comp$opt_cuts[brca_cuts_comp$method == "biniLasso"]
+Bussy_cuts$opt_cuts[3] <-
+  kirc_cuts_comp$opt_cuts[kirc_cuts_comp$method == "biniLasso"]
+
+gbm_cuts_comp %>%
+  select(method, opt_cuts) %>%
+  rowwise %>%
+  mutate(cuts_est_selected = list(unlist(opt_cuts)[! is.na(unlist(opt_cuts))])) %>%
+  ungroup %>%
+  unnest_longer(cuts_est_selected) %>%
+  rowwise %>%
+  mutate(gene = unlist(strsplit(cuts_est_selected_id, "_"))[1]) %>%
+  group_by(method, gene) %>%
+  reframe(cuts = paste0(sort(round(cuts_est_selected, 3)), collapse = " , ")) %>%
+  pivot_wider(id_cols = gene,
+              names_from = method,
+              values_from = cuts) %>%
+  rowwise %>%
+  mutate(n_bini = as.numeric(! is.na(biniLasso)) * str_count(biniLasso, ","),
+         n_Sbini = as.numeric(! is.na(miniLasso)) * str_count(miniLasso, ",")) %>%
+  ungroup %>%
+  arrange(desc(n_bini), desc(n_Sbini)) %>%
+  select(gene, biniLasso, miniLasso) %>%
+  kable(Caption = "Optimal cut-points found by different methods for the GBM daatset") %>%
+  kable_styling()
+brca_cuts_comp %>%
+  select(method, opt_cuts) %>%
+  rowwise %>%
+  mutate(cuts_est_selected = list(unlist(opt_cuts)[! is.na(unlist(opt_cuts))])) %>%
+  ungroup %>%
+  unnest_longer(cuts_est_selected) %>%
+  rowwise %>%
+  mutate(gene = unlist(strsplit(cuts_est_selected_id, "_"))[1]) %>%
+  group_by(method, gene) %>%
+  reframe(cuts = paste0(sort(round(cuts_est_selected, 3)), collapse = " , ")) %>%
+  pivot_wider(id_cols = gene,
+              names_from = method,
+              values_from = cuts) %>%
+  rowwise %>%
+  mutate(n_bini = as.numeric(! is.na(biniLasso)) * str_count(biniLasso, ","),
+         n_Sbini = as.numeric(! is.na(miniLasso)) * str_count(miniLasso, ",")) %>%
+  ungroup %>%
+  arrange(desc(n_bini), desc(n_Sbini)) %>%
+  select(gene, biniLasso, miniLasso) %>%
+  kable(Caption = "Optimal cut-points found by different methods for the BRCA daatset") %>%
+  kable_styling()
+kirc_cuts_comp %>%
+  select(method, opt_cuts) %>%
+  bind_rows(Bussy_cuts %>%
+                mutate(method = "Binacox") %>%
+                filter(data == "KIRC") %>%
+                select(method, opt_cuts = opt_cuts_bina)) %>%
+  rowwise %>%
+  mutate(cuts_est_selected = list(unlist(opt_cuts)[! is.na(unlist(opt_cuts))])) %>%
+  ungroup %>%
+  unnest_longer(cuts_est_selected) %>%
+  rowwise %>%
+  mutate(gene = unlist(strsplit(cuts_est_selected_id, "_"))[1]) %>%
+  group_by(method, gene) %>%
+  reframe(cuts = paste0(sort(round(cuts_est_selected, 3)), collapse = " , ")) %>%
+  pivot_wider(id_cols = gene,
+              names_from = method,
+              values_from = cuts) %>%
+  rowwise %>%
+  mutate(n_bini = as.numeric(! is.na(biniLasso)) * str_count(biniLasso, ","),
+         n_Sbini = as.numeric(! is.na(miniLasso)) * str_count(miniLasso, ","),
+         n_bina = as.numeric(! is.na(`Binacox`)) * str_count(`Binacox`, ",")) %>%
+  ungroup %>%
+  arrange(desc(n_bini), desc(n_Sbini), desc(n_bina)) %>%
+  select(gene, biniLasso, miniLasso, Binacox) %>%
+  kable(Caption = "Optimal cut-points found by different methods for the KIRC daatset") %>%
+  kable_styling()
+
+```
+
+## Compare models' performance
+
+```{r, warning=FALSE, message=FALSE}
+gbm_cuts_comp %>%
+  select(method, opt_cuts) %>%
+  bind_rows(Bussy_cuts %>%
+                mutate(method = "Binacox") %>%
+                filter(data == "GBM") %>%
+                select(method, opt_cuts, opt_cuts_bina)) %>%  
+  group_by(method) %>%
+  unnest_longer(opt_cuts) %>%
+  mutate(`n-cuts` = if_else(method == "Binacox",
+                            sum(! is.na(unlist(opt_cuts_bina))),
+                            sum(! is.na(unlist(opt_cuts))))) %>%
+  group_by(method, `n-cuts`) %>%
+  do(gbm_biniFit =
+       list(biniFit(data = gbm_data_fnl,
+               optCuts = .,
+               y = Surv(gbm_data_fnl$tte, gbm_data_fnl$vital_status),
+               family = "cox",
+               col_cuts = "opt_cuts",
+               col_x = "opt_cuts_id")$fit),
+     gbm_biniFit_bina =
+       list(biniFit(data = gbm_data_fnl,
+               optCuts = .,
+               y = Surv(gbm_data_fnl$tte, gbm_data_fnl$vital_status),
+               family = "cox",
+               col_cuts = "opt_cuts_bina",
+               col_x = "opt_cuts_id")$fit),
+     gbm_bini_dataFit =
+       list(biniFit(data = gbm_data_fnl,
+               optCuts = .,
+               y = Surv(gbm_data_fnl$tte, gbm_data_fnl$vital_status),
+               family = "cox",
+               col_cuts = "opt_cuts",
+               col_x = "opt_cuts_id")$dataFit)) %>%
+  rowwise %>%
+  mutate(AIC = if_else(method == "Binacox",
+                       round(AIC(gbm_biniFit_bina[[1]]), 0),
+                       round(AIC(gbm_biniFit[[1]]), 0)),
+         IBS = ibs(pec(list(Cox = gbm_biniFit[[1]]),
+                       Hist(time, event) ~ 1,
+                       data = gbm_bini_dataFit[[1]],
+                       verbose = F))[if_else(method == "Binacox", 1, 2), 1],
+         `C-index` = if_else(method == "Binacox",
+                             paste0(round(concordance(gbm_biniFit_bina[[1]])$concordance, 3),
+                            " (", round(sqrt(concordance(gbm_biniFit_bina[[1]])$var), 3),
+                            ")"),
+                            paste0(round(concordance(gbm_biniFit[[1]])$concordance, 3),
+                            " (", round(sqrt(concordance(gbm_biniFit[[1]])$var), 3),
+                            ")"))) %>%
+  ungroup %>%
+  mutate(Dataset = "GBM") %>%
+  relocate(Dataset, .before = "method") %>%
+  select(! c(gbm_biniFit, gbm_biniFit_bina, gbm_bini_dataFit)) %>%
+  kable(digits = 3,
+        Caption = "Compare AIC of fitted Cox models by using detected optimal cut-points - GBM dataset") %>%
+  kable_styling()
+
+brca_cuts_comp %>%
+  select(method, opt_cuts) %>%
+  bind_rows(Bussy_cuts %>%
+                mutate(method = "Binacox") %>%
+                filter(data == "BRCA") %>%
+                select(method, opt_cuts, opt_cuts_bina)) %>%  
+  group_by(method) %>%
+  unnest_longer(opt_cuts) %>%
+  mutate(`n-cuts` = if_else(method == "Binacox",
+                            sum(! is.na(unlist(opt_cuts_bina))),
+                            sum(! is.na(unlist(opt_cuts))))) %>%
+  group_by(method, `n-cuts`) %>%
+  do(brca_biniFit =
+       list(biniFit(data = brca_data_fnl,
+               optCuts = .,
+               y = Surv(brca_data_fnl$tte, brca_data_fnl$vital_status),
+               family = "cox",
+               col_cuts = "opt_cuts",
+               col_x = "opt_cuts_id")$fit),
+     brca_biniFit_bina =
+       list(biniFit(data = brca_data_fnl,
+               optCuts = .,
+               y = Surv(brca_data_fnl$tte, brca_data_fnl$vital_status),
+               family = "cox",
+               col_cuts = "opt_cuts_bina",
+               col_x = "opt_cuts_id")$fit),
+     brca_bini_dataFit =
+       list(biniFit(data = brca_data_fnl,
+               optCuts = .,
+               y = Surv(brca_data_fnl$tte, brca_data_fnl$vital_status),
+               family = "cox",
+               col_cuts = "opt_cuts",
+               col_x = "opt_cuts_id")$dataFit)) %>%
+  rowwise %>%
+  mutate(AIC = if_else(method == "Binacox",
+                       round(AIC(brca_biniFit_bina[[1]]), 0),
+                       round(AIC(brca_biniFit[[1]]), 0)),
+         IBS = ibs(pec(list(Cox = brca_biniFit[[1]]),
+                       Hist(time, event) ~ 1,
+                       data = brca_bini_dataFit[[1]],
+                       verbose = F))[if_else(method == "Binacox", 1, 2), 1],
+         `C-index` = if_else(method == "Binacox",
+                             paste0(round(concordance(brca_biniFit_bina[[1]])$concordance, 3),
+                            " (", round(sqrt(concordance(brca_biniFit_bina[[1]])$var), 3),
+                            ")"),
+                            paste0(round(concordance(brca_biniFit[[1]])$concordance, 3),
+                            " (", round(sqrt(concordance(brca_biniFit[[1]])$var), 3),
+                            ")"))) %>%
+  ungroup %>%
+  mutate(Dataset = "BRCA") %>%
+  relocate(Dataset, .before = "method") %>%
+  select(! c(brca_biniFit, brca_biniFit_bina, brca_bini_dataFit)) %>%
+  kable(digits = 3,
+        Caption = "Compare AIC of fitted Cox models by using detected optimal cut-points - BRCA dataset") %>%
+  kable_styling()
+
+kirc_cuts_comp %>%
+  select(method, opt_cuts) %>%
+  bind_rows(Bussy_cuts %>%
+                mutate(method = "Binacox") %>%
+                filter(data == "KIRC") %>%
+                select(method, opt_cuts = opt_cuts_bina)) %>%  
+  group_by(method) %>%
+  unnest_longer(opt_cuts) %>%
+  mutate(`n-cuts` = sum(! is.na(unlist(opt_cuts)))) %>%
+  group_by(method, `n-cuts`) %>%
+  do(kirc_biniFit =
+       list(biniFit(data = kirc_data_fnl,
+               optCuts = .,
+               y = Surv(kirc_data_fnl$tte, kirc_data_fnl$vital_status),
+               family = "cox",
+               col_cuts = "opt_cuts",
+               col_x = "opt_cuts_id")$fit),
+     kirc_bini_dataFit =
+       list(biniFit(data = kirc_data_fnl,
+               optCuts = .,
+               y = Surv(kirc_data_fnl$tte, kirc_data_fnl$vital_status),
+               family = "cox",
+               col_cuts = "opt_cuts",
+               col_x = "opt_cuts_id")$dataFit)) %>%
+  rowwise %>%
+  mutate(AIC = round(AIC(kirc_biniFit[[1]]), 0),
+         IBS = ibs(pec(list(Cox = kirc_biniFit[[1]]),
+                       Hist(time, event) ~ 1,
+                       data = kirc_bini_dataFit[[1]],
+                       verbose = F))[2, 1],
+         `C-index` = paste0(round(concordance(kirc_biniFit[[1]])$concordance, 3),
+                            " (", round(sqrt(concordance(kirc_biniFit[[1]])$var), 3),
+                            ")")) %>%
+  ungroup %>%
+  mutate(Dataset = "KIRC") %>%
+  relocate(Dataset, .before = "method") %>%
+  select(! c(kirc_biniFit, kirc_bini_dataFit)) %>%
+  kable(digits = 3,
+        Caption = "Compare AIC of fitted Cox models by using detected optimal cut-points - KIRC dataset") %>%
+  kable_styling()
+
+
+```
+
+## Fixed number of optimal cut-points
+
+```{r, warning=FALSE, message=FALSE}
+gbm_fixedCuts_comp <-
+ opt_fixed_nCuts(x = gbm_converted_obj$x,
+                 y = survival::Surv(gbm_data_fnl$tte, gbm_data_fnl$vital_status),
+                 max_nCuts = 2,
+                 method = "both",
+                 family = "cox",
+                 lasso_rule = "min",
+                 lasso_nfolds = 10,
+                 cols = colnames(gbm_data_fnl)[! colnames(gbm_data_fnl) %in%
+                                            c("barcode", "vital_status", "tte")],
+                 x_cuts = gbm_converted_obj$x_cuts)
+brca_fixedCuts_comp <-
+ opt_fixed_nCuts(x = brca_converted_obj$x,
+                 y = survival::Surv(brca_data_fnl$tte, brca_data_fnl$vital_status),
+                 max_nCuts = 2,
+                 method = "both",
+                 family = "cox",
+                 lasso_rule = "min",
+                 lasso_nfolds = 10,
+                 cols = colnames(brca_data_fnl)[! colnames(brca_data_fnl) %in%
+                                            c("barcode", "vital_status", "tte")],
+                 x_cuts = brca_converted_obj$x_cuts)
+kirc_fixedCuts_comp <-
+ opt_fixed_nCuts(x = kirc_converted_obj$x,
+                 y = survival::Surv(kirc_data_fnl$tte, kirc_data_fnl$vital_status),
+                 max_nCuts = 2,
+                 method = "both",
+                 family = "cox",
+                 lasso_rule = "min",
+                 lasso_nfolds = 10,
+                 cols = colnames(kirc_data_fnl)[! colnames(kirc_data_fnl) %in%
+                                            c("barcode", "vital_status", "tte")],
+                 x_cuts = kirc_converted_obj$x_cuts)
+
+
+gbm_fixedCuts_comp %>%
+  select(method, opt_cuts) %>%
+  rowwise %>%
+  mutate(cuts_est_selected = list(unlist(opt_cuts)[! is.na(unlist(opt_cuts))])) %>%
+  ungroup %>%
+  unnest_longer(cuts_est_selected) %>%
+  rowwise %>%
+  mutate(ind_tmp = gregexpr("_ENSG", cuts_est_selected_id)[[1]][1] - 1,
+         gene = substr(cuts_est_selected_id, 1, ind_tmp)) %>%
+  group_by(method, gene) %>%
+  reframe(cuts = paste0(sort(round(cuts_est_selected, 3)), collapse = " , ")) %>%
+  pivot_wider(id_cols = gene,
+              names_from = method,
+              values_from = cuts) %>%
+  rowwise %>%
+  mutate(n_bini = as.numeric(! is.na(biniLasso)) * str_count(biniLasso, ","),
+         n_Sbini = as.numeric(! is.na(miniLasso)) * str_count(miniLasso, ",")) %>%
+  ungroup %>%
+  arrange(desc(n_bini), desc(n_Sbini)) %>%
+  select(gene, biniLasso, miniLasso) %>%
+  kable(Caption = "Optimal cut-points found by different methods for the GBM daatset") %>%
+  kable_styling()
+brca_fixedCuts_comp %>%
+  select(method, opt_cuts) %>%
+  rowwise %>%
+  mutate(cuts_est_selected = list(unlist(opt_cuts)[! is.na(unlist(opt_cuts))])) %>%
+  ungroup %>%
+  unnest_longer(cuts_est_selected) %>%
+  rowwise %>%
+  mutate(ind_tmp = gregexpr("_ENSG", cuts_est_selected_id)[[1]][1] - 1,
+         gene = substr(cuts_est_selected_id, 1, ind_tmp)) %>%
+  group_by(method, gene) %>%
+  reframe(cuts = paste0(sort(round(cuts_est_selected, 3)), collapse = " , ")) %>%
+  pivot_wider(id_cols = gene,
+              names_from = method,
+              values_from = cuts) %>%
+  rowwise %>%
+  mutate(n_bini = as.numeric(! is.na(biniLasso)) * str_count(biniLasso, ","),
+         n_Sbini = as.numeric(! is.na(miniLasso)) * str_count(miniLasso, ",")) %>%
+  ungroup %>%
+  arrange(desc(n_bini), desc(n_Sbini)) %>%
+  select(gene, biniLasso, miniLasso) %>%
+  kable(Caption = "Optimal cut-points found by different methods for the BRCA daatset") %>%
+  kable_styling()
+
+kirc_fixedCuts_comp %>%
+  select(method, opt_cuts) %>%
+  rowwise %>%
+  mutate(cuts_est_selected = list(unlist(opt_cuts)[! is.na(unlist(opt_cuts))])) %>%
+  ungroup %>%
+  unnest_longer(cuts_est_selected) %>%
+  rowwise %>%
+  mutate(ind_tmp = gregexpr("_ENSG", cuts_est_selected_id)[[1]][1] - 1,
+         gene = substr(cuts_est_selected_id, 1, ind_tmp)) %>%
+  group_by(method, gene) %>%
+  reframe(cuts = paste0(sort(round(cuts_est_selected, 3)), collapse = " , ")) %>%
+  pivot_wider(id_cols = gene,
+              names_from = method,
+              values_from = cuts) %>%
+  rowwise %>%
+  mutate(n_bini = as.numeric(! is.na(biniLasso)) * str_count(biniLasso, ","),
+         n_Sbini = as.numeric(! is.na(miniLasso)) * str_count(miniLasso, ",")) %>%
+  ungroup %>%
+  arrange(desc(n_bini), desc(n_Sbini)) %>%
+  select(gene, biniLasso, miniLasso) %>%
+  kable(Caption = "Optimal cut-points found by different methods for the KIRC daatset") %>%
+  kable_styling()
+
+```
+
+Compare performance of the models:
+
+```{r, warning=FALSE, message=FALSE}
+gbm_fixedCuts_comp %>%
+  select(method, opt_cuts) %>%
+  group_by(method) %>%
+  unnest_longer(opt_cuts) %>%
+  mutate(`n-cuts` = sum(! is.na(unlist(opt_cuts)))) %>%
+  group_by(method, `n-cuts`) %>%
+  do(gbm_biniFit =
+       list(biniFit(data = gbm_data_fnl,
+               optCuts = .,
+               y = Surv(gbm_data_fnl$tte, gbm_data_fnl$vital_status),
+               family = "cox",
+               col_cuts = "opt_cuts",
+               col_x = "opt_cuts_id")$fit),
+     gbm_bini_dataFit =
+       list(biniFit(data = gbm_data_fnl,
+               optCuts = .,
+               y = Surv(gbm_data_fnl$tte, gbm_data_fnl$vital_status),
+               family = "cox",
+               col_cuts = "opt_cuts",
+               col_x = "opt_cuts_id")$dataFit)) %>%
+  rowwise %>%
+  mutate(AIC = round(AIC(gbm_biniFit[[1]]), 0),
+         IBS = ibs(pec(list(Cox = gbm_biniFit[[1]]),
+                       Hist(time, event) ~ 1,
+                       data = gbm_bini_dataFit[[1]],
+                       verbose = F))[2, 1],
+         `C-index` = paste0(round(concordance(gbm_biniFit[[1]])$concordance, 3),
+                            " (", round(sqrt(concordance(gbm_biniFit[[1]])$var), 3),
+                            ")")) %>%
+  ungroup %>%
+  mutate(Dataset = "GBM") %>%
+  relocate(Dataset, .before = "method") %>%
+  select(! c(gbm_biniFit, gbm_bini_dataFit)) %>%
+  kable(digits = 3,
+        Caption = "Compare AIC of fitted Cox models by using detected optimal cut-points - GBM dataset") %>%
+  kable_styling()
+
+brca_fixedCuts_comp %>%
+  select(method, opt_cuts) %>%
+  group_by(method) %>%
+  unnest_longer(opt_cuts) %>%
+  mutate(`n-cuts` = sum(! is.na(unlist(opt_cuts)))) %>%
+  group_by(method, `n-cuts`) %>%
+  do(brca_biniFit =
+       list(biniFit(data = brca_data_fnl,
+               optCuts = .,
+               y = Surv(brca_data_fnl$tte, brca_data_fnl$vital_status),
+               family = "cox",
+               col_cuts = "opt_cuts",
+               col_x = "opt_cuts_id")$fit),
+     brca_bini_dataFit =
+       list(biniFit(data = brca_data_fnl,
+               optCuts = .,
+               y = Surv(brca_data_fnl$tte, brca_data_fnl$vital_status),
+               family = "cox",
+               col_cuts = "opt_cuts",
+               col_x = "opt_cuts_id")$dataFit)) %>%
+  rowwise %>%
+  mutate(AIC = round(AIC(brca_biniFit[[1]]), 0),
+         IBS = ibs(pec(list(Cox = brca_biniFit[[1]]),
+                       Hist(time, event) ~ 1,
+                       data = brca_bini_dataFit[[1]],
+                       verbose = F))[2, 1],
+         `C-index` = paste0(round(concordance(brca_biniFit[[1]])$concordance, 3),
+                            " (", round(sqrt(concordance(brca_biniFit[[1]])$var), 3),
+                            ")")) %>%
+  ungroup %>%
+  mutate(Dataset = "BRCA") %>%
+  relocate(Dataset, .before = "method") %>%
+  select(! c(brca_biniFit, brca_bini_dataFit)) %>%
+  kable(digits = 3,
+        Caption = "Compare AIC of fitted Cox models by using detected optimal cut-points - BRCA dataset") %>%
+  kable_styling()
+
+kirc_fixedCuts_comp %>%
+  select(method, opt_cuts) %>%
+  group_by(method) %>%
+  unnest_longer(opt_cuts) %>%
+  mutate(`n-cuts` = sum(! is.na(unlist(opt_cuts)))) %>%
+  group_by(method, `n-cuts`) %>%
+  do(kirc_biniFit =
+       list(biniFit(data = kirc_data_fnl,
+               optCuts = .,
+               y = Surv(kirc_data_fnl$tte, kirc_data_fnl$vital_status),
+               family = "cox",
+               col_cuts = "opt_cuts",
+               col_x = "opt_cuts_id")$fit),
+     kirc_bini_dataFit =
+       list(biniFit(data = kirc_data_fnl,
+               optCuts = .,
+               y = Surv(kirc_data_fnl$tte, kirc_data_fnl$vital_status),
+               family = "cox",
+               col_cuts = "opt_cuts",
+               col_x = "opt_cuts_id")$dataFit)) %>%
+  rowwise %>%
+  mutate(AIC = round(AIC(kirc_biniFit[[1]]), 0),
+         IBS = ibs(pec(list(Cox = kirc_biniFit[[1]]),
+                       Hist(time, event) ~ 1,
+                       data = kirc_bini_dataFit[[1]],
+                       verbose = F))[2, 1],
+         `C-index` = paste0(round(concordance(kirc_biniFit[[1]])$concordance, 3),
+                            " (", round(sqrt(concordance(kirc_biniFit[[1]])$var), 3),
+                            ")")) %>%
+  ungroup %>%
+  mutate(Dataset = "KIRC") %>%
+  relocate(Dataset, .before = "method") %>%
+  select(! c(kirc_biniFit, kirc_bini_dataFit)) %>%
+  kable(digits = 3,
+        Caption = "Compare AIC of fitted Cox models by using detected optimal cut-points - KIRC dataset") %>%
+  kable_styling()
+
+
+```
