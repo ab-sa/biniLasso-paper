@@ -22,7 +22,7 @@ Each step in the vignette is fully reproducible, and all functions are part of t
 
 ### **Data**
 
-The vignette uses three preprocessed TCGA datasets:
+The vignette uses three preprocessed TCGA datasets as well as simulated dataset:
 
 * `gbm_fnl.rds` — Glioblastoma multiforme (GBM)
 * `brca_fnl.rds` — Breast invasive carcinoma (BRCA)
@@ -58,7 +58,3 @@ Safari, A., Helisaz, H., & Loewen, P. (2025). *biniLasso: Automated cut-point de
 For questions, suggestions, or bug reports, please contact:
 **Abdollah Safari** – [a.safari@ut.ac.ir](mailto:a.safari@ut.ac.ir)
 **Hamed Helisaz** – [hamed.helisaz@ubc.ca](mailto:hamed.helisaz@ubc.ca)
-
----
-
-Would you like me to tailor this README for inclusion on GitHub (with Markdown formatting, links, and badges), or keep it as a plain text document for internal use (e.g., within the vignette folder)?
