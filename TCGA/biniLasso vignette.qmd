@@ -1,20 +1,24 @@
 ---
 title: "biniLasso vignette"
-author: "Abdollah Safari"
-format: html
-editor: visual
-quarto-quiet: true
-editor_options: 
-  chunk_output_type: console
+author: 
+- "Abdollah Safari"
+- "Hamed Helisaz"
+format:
+  html:
+    theme: cerulean
+    toc: true
+    toc-depth: 6
+    fig-cap-location: bottom
+    number-sections: true
 ---
 
 ## Introduction
 
-The biniLasso and its sparse variant, miniLasso, are novel methods for prognostic analysis of high-dimensional survival data that enable detection of multiple cut-points per continuous feature to categorize them for obtaining more interpretable results from prediction models. This approach leverages the Cox proportional hazards model with two key innovations: (1) a cumulative binarization scheme with L1-penalized coefficients operating on context-dependent cut-point candidates, and (2) for miniLasso, additional uniLasso regularization, a recently developed two-stage regularized regression, to enforce sparsity while preserving univariate coefficient patterns. For details, see the original paper by Safari et al. available at https://arxiv.org/abs/2503.16687 .
+The biniLasso and its sparse variant, miniLasso, are novel methods for prognostic analysis of high-dimensional survival data that enable detection of multiple cut-points per continuous feature to categorize them for obtaining more interpretable results from prediction models. This approach leverages the Cox proportional hazards model with two key innovations: (1) a cumulative binarization scheme with L1-penalized coefficients operating on context-dependent cut-point candidates, and (2) for miniLasso, additional uniLasso regularization, a recently developed two-stage regularized regression, to enforce sparsity while preserving univariate coefficient patterns. For details, see the original paper by Safari et al. available at <https://arxiv.org/abs/2503.16687>
 
 ## Initial setup
 
-```{r, include=FALSE}
+```{r setup, include=FALSE}
 library(tidyverse)
 library(magrittr)
 library(survival)
@@ -40,7 +44,7 @@ cuts_to_list <-
 
 ```
 
-```{r}
+```{r setup_2}
 library(tidyverse)
 library(magrittr)
 library(survival)
@@ -84,11 +88,11 @@ set.seed(12345)
 
 ```
 
-## Data preproccessing and extract candidate cut-points
+## Data preproccessing
 
 Before fitting the model to extract optimal cut-points, one needs to specify cut-points candidates. We will do this by using the $num_to_cat$ function. This can be done either by simply specifying number of bins for numeric covariates (set $n_bins$ argument), or more explicitly, passing the candidate cut-points per covariate by setting the cuts_list argument (see function help for more details and a simple example). Here, we use the former and set the number of bins to 50 for all genes.
 
-```{r, warning=FALSE, message=FALSE}
+```{r data_preprocessing, warning=FALSE, message=FALSE}
 gbm_converted_obj <-
   cumBinarizer(data = gbm_data_fnl,
                cols = colnames(gbm_data_fnl)[! colnames(gbm_data_fnl) %in%
@@ -125,7 +129,9 @@ As it can be seen, the first gene has 50 candidate cut-points as it was indicate
 
 ## Obtain optimal cut-points
 
-```{r, warning=FALSE, message=FALSE}
+After generating candidate cut-points, the next step is to identify which cut-points are optimal based on the outcome variable. This is done using the `opt_cuts_finder()` function, which fits Lasso-regularized Cox models to select the most informative thresholds. The argument `method = "both"` runs both biniLasso and miniLasso at once, so their results can be compared directly. The function also uses cross-validation to choose the best regularization parameter. The output provides a list of estimated cut-points for each gene across all datasets (GBM, BRCA, and KIRC). The results are then displayed in tables showing the detected cut-points from both methods, making it easy to compare how biniLasso and miniLasso differ in their selected thresholds.
+
+```{r optimal_cutpoint, warning=FALSE, message=FALSE}
 gbm_cuts_comp <-
   opt_cuts_finder(x = gbm_converted_obj$x,
                   y = survival::Surv(gbm_data_fnl$tte, gbm_data_fnl$vital_status),
@@ -235,9 +241,11 @@ kirc_cuts_comp %>%
 
 ```
 
-## Compare models' performance
+### Compare models' performance
 
-```{r, warning=FALSE, message=FALSE}
+Once the optimal cut-points are obtained, this section evaluates how well the resulting models perform. The function `biniFit()` is used to fit Cox proportional hazards models based on the detected cut-points. The fitted models from biniLasso, miniLasso, and Binacox are compared using three performance measures: the Akaike Information Criterion (AIC), the Integrated Brier Score (IBS), and the Concordance Index (C-index). The AIC reflects the trade-off between model fit and complexity, the IBS measures prediction accuracy over time, and the C-index evaluates the model’s ability to rank survival times correctly. The results show that biniLasso and miniLasso consistently outperform Binacox, providing lower AIC and IBS values and higher C-index scores. These findings confirm the improved predictive and computational performance of the proposed methods.
+
+```{r model_comparison, warning=FALSE, message=FALSE}
 gbm_cuts_comp %>%
   select(method, opt_cuts) %>%
   bind_rows(Bussy_cuts %>%
@@ -396,7 +404,9 @@ kirc_cuts_comp %>%
 
 ## Fixed number of optimal cut-points
 
-```{r, warning=FALSE, message=FALSE}
+In some applications, it is desirable to limit the number of cut-points per variable for easier interpretation. This section explains how to use the `opt_fixed_nCuts()` function to restrict the model to a fixed number of thresholds—here, at most two per feature. The function identifies the best-performing cut-points within this constraint while maintaining good predictive ability. The results are summarized in tables showing the selected thresholds for each gene in all datasets. As it can be seen, limiting the number of cut-points makes the final model simpler and more interpretable, while still keeping its predictive performance close to the unrestricted version. This approach is particularly useful in clinical studies where fewer, well-defined thresholds are preferred.
+
+```{r fixed_cut_points, warning=FALSE, message=FALSE}
 gbm_fixedCuts_comp <-
  opt_fixed_nCuts(x = gbm_converted_obj$x,
                  y = survival::Surv(gbm_data_fnl$tte, gbm_data_fnl$vital_status),
@@ -454,6 +464,13 @@ gbm_fixedCuts_comp %>%
   select(gene, biniLasso, miniLasso) %>%
   kable(Caption = "Optimal cut-points found by different methods for the GBM daatset") %>%
   kable_styling()
+
+
+```
+
+It should be noted that some genes show only one threshold or `NA` instead of two. This happens for two main reasons. In cases where two detected thresholds are very close to each other, the algorithm treats them as overlapping and merges them into a single effective cut-point, since they represent nearly the same boundary in the variable’s range. This is often observed when the predictor has a limited range or when the outcome does not vary much between nearby values. On the other hand, `NA` values occur when no meaningful threshold is detected for that variable. This typically happens when the variable shows no strong association with the outcome after penalization, or when its effect is roughly linear and cannot be improved by categorization. In both cases, the algorithm avoids introducing unnecessary or redundant thresholds, resulting in a simpler and more interpretable model.
+
+```{r fixed_cut_points_2, warning=FALSE, message=FALSE}
 brca_fixedCuts_comp %>%
   select(method, opt_cuts) %>%
   rowwise %>%
@@ -502,9 +519,11 @@ kirc_fixedCuts_comp %>%
 
 ```
 
-Compare performance of the models:
+### Compare models' performance:
 
-```{r, warning=FALSE, message=FALSE}
+The final part summarizes the main outcomes of the vignette and presents concise comparison tables for the GBM, BRCA, and KIRC datasets. The tables show the detected cut-points across biniLasso, miniLasso, and Binacox, confirming that the proposed cumulative binarization and uniLasso regularization result in models that are both interpretable and computationally efficient. The findings in this section are consistent with the simulation and real-data results presented in the main article, demonstrating the practical advantages of biniLasso and miniLasso for high-dimensional survival analysis.
+
+```{r model_comparison_2, warning=FALSE, message=FALSE}
 gbm_fixedCuts_comp %>%
   select(method, opt_cuts) %>%
   group_by(method) %>%

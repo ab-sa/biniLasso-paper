@@ -2,11 +2,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.5.57">
+<meta name="generator" content="quarto-1.7.32">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Abdollah Safari">
+<meta name="author" content="Hamed Helisaz">
 
 <title>biniLasso vignette</title>
 <style>
@@ -22,8 +23,9 @@ ul.task-list li input[type="checkbox"] {
   vertical-align: middle;
 }
 /* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -34,7 +36,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -59,17 +61,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <script src="biniLasso vignette_files/libs/clipboard/clipboard.min.js"></script>
-<script src="biniLasso vignette_files/libs/quarto-html/quarto.js"></script>
+<script src="biniLasso vignette_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="biniLasso vignette_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="biniLasso vignette_files/libs/quarto-html/popper.min.js"></script>
 <script src="biniLasso vignette_files/libs/quarto-html/tippy.umd.min.js"></script>
 <script src="biniLasso vignette_files/libs/quarto-html/anchor.min.js"></script>
 <link href="biniLasso vignette_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="biniLasso vignette_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="biniLasso vignette_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="biniLasso vignette_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="biniLasso vignette_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="biniLasso vignette_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="biniLasso vignette_files/libs/bootstrap/bootstrap-7f5740c09e508315c41a07c582dff588.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script src="biniLasso vignette_files/libs/kePrint-0.0.1/kePrint.js"></script>
+
 <link href="biniLasso vignette_files/libs/lightable-0.0.1/lightable.css" rel="stylesheet">
+
 
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
@@ -103,10 +108,28 @@ window.Quarto = {
 
 </head>
 
-<body class="fullcontent">
+<body class="quarto-light">
 
 <div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
-
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction"><span class="header-section-number">1</span> Introduction</a></li>
+  <li><a href="#initial-setup" id="toc-initial-setup" class="nav-link" data-scroll-target="#initial-setup"><span class="header-section-number">2</span> Initial setup</a></li>
+  <li><a href="#data-preproccessing" id="toc-data-preproccessing" class="nav-link" data-scroll-target="#data-preproccessing"><span class="header-section-number">3</span> Data preproccessing</a></li>
+  <li><a href="#obtain-optimal-cut-points" id="toc-obtain-optimal-cut-points" class="nav-link" data-scroll-target="#obtain-optimal-cut-points"><span class="header-section-number">4</span> Obtain optimal cut-points</a>
+  <ul>
+  <li><a href="#compare-models-performance" id="toc-compare-models-performance" class="nav-link" data-scroll-target="#compare-models-performance"><span class="header-section-number">4.1</span> Compare models’ performance</a></li>
+  </ul></li>
+  <li><a href="#fixed-number-of-optimal-cut-points" id="toc-fixed-number-of-optimal-cut-points" class="nav-link" data-scroll-target="#fixed-number-of-optimal-cut-points"><span class="header-section-number">5</span> Fixed number of optimal cut-points</a>
+  <ul>
+  <li><a href="#compare-models-performance-1" id="toc-compare-models-performance-1" class="nav-link" data-scroll-target="#compare-models-performance-1"><span class="header-section-number">5.1</span> Compare models’ performance:</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -119,9 +142,10 @@ window.Quarto = {
 <div class="quarto-title-meta">
 
     <div>
-    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-heading">Authors</div>
     <div class="quarto-title-meta-contents">
              <p>Abdollah Safari </p>
+             <p>Hamed Helisaz </p>
           </div>
   </div>
     
@@ -134,12 +158,12 @@ window.Quarto = {
 </header>
 
 
-<section id="introduction" class="level2">
-<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
-<p>The biniLasso and its sparse variant, miniLasso, are novel methods for prognostic analysis of high-dimensional survival data that enable detection of multiple cut-points per continuous feature to categorize them for obtaining more interpretable results from prediction models. This approach leverages the Cox proportional hazards model with two key innovations: (1) a cumulative binarization scheme with L1-penalized coefficients operating on context-dependent cut-point candidates, and (2) for miniLasso, additional uniLasso regularization, a recently developed two-stage regularized regression, to enforce sparsity while preserving univariate coefficient patterns. For details, see the original paper by Safari et al.&nbsp;available at https://arxiv.org/abs/2503.16687 .</p>
+<section id="introduction" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="introduction"><span class="header-section-number">1</span> Introduction</h2>
+<p>The biniLasso and its sparse variant, miniLasso, are novel methods for prognostic analysis of high-dimensional survival data that enable detection of multiple cut-points per continuous feature to categorize them for obtaining more interpretable results from prediction models. This approach leverages the Cox proportional hazards model with two key innovations: (1) a cumulative binarization scheme with L1-penalized coefficients operating on context-dependent cut-point candidates, and (2) for miniLasso, additional uniLasso regularization, a recently developed two-stage regularized regression, to enforce sparsity while preserving univariate coefficient patterns. For details, see the original paper by Safari et al.&nbsp;available at <a href="https://arxiv.org/abs/2503.16687" class="uri">https://arxiv.org/abs/2503.16687</a></p>
 </section>
-<section id="initial-setup" class="level2">
-<h2 class="anchored" data-anchor-id="initial-setup">Initial setup</h2>
+<section id="initial-setup" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="initial-setup"><span class="header-section-number">2</span> Initial setup</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(magrittr)</span>
@@ -150,43 +174,41 @@ window.Quarto = {
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(kableExtra)</span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(biniLasso)</span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"functions.R"</span>)</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>gbm_data_fnl <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">"data/gbm_fnl.rds"</span>)</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>brca_data_fnl <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">"data/brca_fnl.rds"</span>)</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>kirc_data_fnl <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">"data/kirc_fnl.rds"</span>)</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(gbm_data_fnl) <span class="ot">&lt;-</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  stringr<span class="sc">::</span><span class="fu">str_replace_all</span>(<span class="fu">colnames</span>(gbm_data_fnl), <span class="st">"-"</span>, <span class="st">"_"</span>)</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(brca_data_fnl) <span class="ot">&lt;-</span></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  stringr<span class="sc">::</span><span class="fu">str_replace_all</span>(<span class="fu">colnames</span>(brca_data_fnl), <span class="st">"-"</span>, <span class="st">"_"</span>)</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(kirc_data_fnl) <span class="ot">&lt;-</span></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  stringr<span class="sc">::</span><span class="fu">str_replace_all</span>(<span class="fu">colnames</span>(kirc_data_fnl), <span class="st">"-"</span>, <span class="st">"_"</span>)</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>bussy_est <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/binacox_tcga_cuts.csv"</span>,</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>                      <span class="at">header =</span> <span class="cn">TRUE</span>, <span class="at">row.names =</span> <span class="cn">NULL</span>)</span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>Bussy_cuts <span class="ot">&lt;-</span></span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>  bussy_est[<span class="sc">-</span><span class="dv">1</span>, ] <span class="sc">%&gt;%</span></span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(data, cut_points_estimate_x) <span class="sc">%&gt;%</span></span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">opt_cuts_bina =</span> <span class="fu">list</span>(<span class="fu">cuts_to_list</span>(cut_points_estimate_x))) <span class="sc">%&gt;%</span></span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(data, opt_cuts_bina) <span class="sc">%&gt;%</span></span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>  ungroup</span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(Bussy_cuts<span class="sc">$</span>opt_cuts_bina[Bussy_cuts<span class="sc">$</span>data <span class="sc">==</span> <span class="st">"GBM"</span>][[<span class="dv">1</span>]]) <span class="ot">&lt;-</span></span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(gbm_data_fnl)[<span class="sc">!</span> <span class="fu">colnames</span>(gbm_data_fnl) <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"barcode"</span>, <span class="st">"vital_status"</span>, <span class="st">"tte"</span>)]</span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(Bussy_cuts<span class="sc">$</span>opt_cuts_bina[Bussy_cuts<span class="sc">$</span>data <span class="sc">==</span> <span class="st">"KIRC"</span>][[<span class="dv">1</span>]]) <span class="ot">&lt;-</span></span>
-<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(kirc_data_fnl)[<span class="sc">!</span> <span class="fu">colnames</span>(kirc_data_fnl) <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"barcode"</span>, <span class="st">"vital_status"</span>, <span class="st">"tte"</span>)]</span>
-<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(Bussy_cuts<span class="sc">$</span>opt_cuts_bina[Bussy_cuts<span class="sc">$</span>data <span class="sc">==</span> <span class="st">"BRCA"</span>][[<span class="dv">1</span>]]) <span class="ot">&lt;-</span></span>
-<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(brca_data_fnl)[<span class="sc">!</span> <span class="fu">colnames</span>(brca_data_fnl) <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"barcode"</span>, <span class="st">"vital_status"</span>, <span class="st">"tte"</span>)]</span>
-<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>n_bins <span class="ot">&lt;-</span> <span class="dv">50</span></span>
-<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>gbm_data_fnl <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">"data/gbm_fnl.rds"</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>brca_data_fnl <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">"data/brca_fnl.rds"</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>kirc_data_fnl <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">"data/kirc_fnl.rds"</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(gbm_data_fnl) <span class="ot">&lt;-</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  stringr<span class="sc">::</span><span class="fu">str_replace_all</span>(<span class="fu">colnames</span>(gbm_data_fnl), <span class="st">"-"</span>, <span class="st">"_"</span>)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(brca_data_fnl) <span class="ot">&lt;-</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  stringr<span class="sc">::</span><span class="fu">str_replace_all</span>(<span class="fu">colnames</span>(brca_data_fnl), <span class="st">"-"</span>, <span class="st">"_"</span>)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(kirc_data_fnl) <span class="ot">&lt;-</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  stringr<span class="sc">::</span><span class="fu">str_replace_all</span>(<span class="fu">colnames</span>(kirc_data_fnl), <span class="st">"-"</span>, <span class="st">"_"</span>)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>bussy_est <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/binacox_tcga_cuts.csv"</span>,</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>                      <span class="at">header =</span> <span class="cn">TRUE</span>, <span class="at">row.names =</span> <span class="cn">NULL</span>)</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>Bussy_cuts <span class="ot">&lt;-</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  bussy_est[<span class="sc">-</span><span class="dv">1</span>, ] <span class="sc">%&gt;%</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(data, cut_points_estimate_x) <span class="sc">%&gt;%</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">opt_cuts_bina =</span> <span class="fu">list</span>(<span class="fu">cuts_to_list</span>(cut_points_estimate_x))) <span class="sc">%&gt;%</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(data, opt_cuts_bina) <span class="sc">%&gt;%</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>  ungroup</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(Bussy_cuts<span class="sc">$</span>opt_cuts_bina[Bussy_cuts<span class="sc">$</span>data <span class="sc">==</span> <span class="st">"GBM"</span>][[<span class="dv">1</span>]]) <span class="ot">&lt;-</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(gbm_data_fnl)[<span class="sc">!</span> <span class="fu">colnames</span>(gbm_data_fnl) <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"barcode"</span>, <span class="st">"vital_status"</span>, <span class="st">"tte"</span>)]</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(Bussy_cuts<span class="sc">$</span>opt_cuts_bina[Bussy_cuts<span class="sc">$</span>data <span class="sc">==</span> <span class="st">"KIRC"</span>][[<span class="dv">1</span>]]) <span class="ot">&lt;-</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(kirc_data_fnl)[<span class="sc">!</span> <span class="fu">colnames</span>(kirc_data_fnl) <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"barcode"</span>, <span class="st">"vital_status"</span>, <span class="st">"tte"</span>)]</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(Bussy_cuts<span class="sc">$</span>opt_cuts_bina[Bussy_cuts<span class="sc">$</span>data <span class="sc">==</span> <span class="st">"BRCA"</span>][[<span class="dv">1</span>]]) <span class="ot">&lt;-</span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(brca_data_fnl)[<span class="sc">!</span> <span class="fu">colnames</span>(brca_data_fnl) <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"barcode"</span>, <span class="st">"vital_status"</span>, <span class="st">"tte"</span>)]</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>n_bins <span class="ot">&lt;-</span> <span class="dv">50</span></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="data-preproccessing-and-extract-candidate-cut-points" class="level2">
-<h2 class="anchored" data-anchor-id="data-preproccessing-and-extract-candidate-cut-points">Data preproccessing and extract candidate cut-points</h2>
+<section id="data-preproccessing" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="data-preproccessing"><span class="header-section-number">3</span> Data preproccessing</h2>
 <p>Before fitting the model to extract optimal cut-points, one needs to specify cut-points candidates. We will do this by using the <span class="math inline">\(num_to_cat\)</span> function. This can be done either by simply specifying number of bins for numeric covariates (set <span class="math inline">\(n_bins\)</span> argument), or more explicitly, passing the candidate cut-points per covariate by setting the cuts_list argument (see function help for more details and a simple example). Here, we use the former and set the number of bins to 50 for all genes.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>gbm_converted_obj <span class="ot">&lt;-</span></span>
@@ -238,8 +260,9 @@ window.Quarto = {
 </div>
 <p>As it can be seen, the first gene has 50 candidate cut-points as it was indicated in the input arguments of the cumBinarizer function. However, for the second gene, due to limited number of unique values in the gene expression data in the given gene, the function returns only 37 candidate cut-points, and therefore, the counts of different levels of the resulting categorical variables after categorization will be unbalanced.</p>
 </section>
-<section id="obtain-optimal-cut-points" class="level2">
-<h2 class="anchored" data-anchor-id="obtain-optimal-cut-points">Obtain optimal cut-points</h2>
+<section id="obtain-optimal-cut-points" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="obtain-optimal-cut-points"><span class="header-section-number">4</span> Obtain optimal cut-points</h2>
+<p>After generating candidate cut-points, the next step is to identify which cut-points are optimal based on the outcome variable. This is done using the <code>opt_cuts_finder()</code> function, which fits Lasso-regularized Cox models to select the most informative thresholds. The argument <code>method = "both"</code> runs both biniLasso and miniLasso at once, so their results can be compared directly. The function also uses cross-validation to choose the best regularization parameter. The output provides a list of estimated cut-points for each gene across all datasets (GBM, BRCA, and KIRC). The results are then displayed in tables showing the detected cut-points from both methods, making it easy to compare how biniLasso and miniLasso differ in their selected thresholds.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>gbm_cuts_comp <span class="ot">&lt;-</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">opt_cuts_finder</span>(<span class="at">x =</span> gbm_converted_obj<span class="sc">$</span>x,</span>
@@ -294,10 +317,10 @@ window.Quarto = {
 <span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>              <span class="at">values_from =</span> cuts) <span class="sc">%&gt;%</span></span>
 <span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
 <span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">n_bini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(biniLasso)) <span class="sc">*</span> <span class="fu">str_count</span>(biniLasso, <span class="st">","</span>),</span>
-<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a>         <span class="at">n_Sbini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(<span class="st">`</span><span class="at">Sparse biniLasso</span><span class="st">`</span>)) <span class="sc">*</span> <span class="fu">str_count</span>(<span class="st">`</span><span class="at">Sparse biniLasso</span><span class="st">`</span>, <span class="st">","</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a>         <span class="at">n_Sbini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(miniLasso)) <span class="sc">*</span> <span class="fu">str_count</span>(miniLasso, <span class="st">","</span>)) <span class="sc">%&gt;%</span></span>
 <span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a>  ungroup <span class="sc">%&gt;%</span></span>
 <span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(n_bini), <span class="fu">desc</span>(n_Sbini)) <span class="sc">%&gt;%</span></span>
-<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(gene, biniLasso, <span class="st">`</span><span class="at">Sparse biniLasso</span><span class="st">`</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(gene, biniLasso, miniLasso) <span class="sc">%&gt;%</span></span>
 <span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">Caption =</span> <span class="st">"Optimal cut-points found by different methods for the GBM daatset"</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
@@ -306,7 +329,7 @@ window.Quarto = {
 <tr class="header">
 <th style="text-align: left;" data-quarto-table-cell-role="th">gene</th>
 <th style="text-align: left;" data-quarto-table-cell-role="th">biniLasso</th>
-<th style="text-align: left;" data-quarto-table-cell-role="th">Sparse biniLasso</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">miniLasso</th>
 </tr>
 </thead>
 <tbody>
@@ -527,8 +550,6 @@ window.Quarto = {
 </tr>
 </tbody>
 </table>
-
-
 </div>
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>brca_cuts_comp <span class="sc">%&gt;%</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(method, opt_cuts) <span class="sc">%&gt;%</span></span>
@@ -545,10 +566,10 @@ window.Quarto = {
 <span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>              <span class="at">values_from =</span> cuts) <span class="sc">%&gt;%</span></span>
 <span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
 <span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">n_bini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(biniLasso)) <span class="sc">*</span> <span class="fu">str_count</span>(biniLasso, <span class="st">","</span>),</span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>         <span class="at">n_Sbini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(<span class="st">`</span><span class="at">Sparse biniLasso</span><span class="st">`</span>)) <span class="sc">*</span> <span class="fu">str_count</span>(<span class="st">`</span><span class="at">Sparse biniLasso</span><span class="st">`</span>, <span class="st">","</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>         <span class="at">n_Sbini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(miniLasso)) <span class="sc">*</span> <span class="fu">str_count</span>(miniLasso, <span class="st">","</span>)) <span class="sc">%&gt;%</span></span>
 <span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  ungroup <span class="sc">%&gt;%</span></span>
 <span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(n_bini), <span class="fu">desc</span>(n_Sbini)) <span class="sc">%&gt;%</span></span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(gene, biniLasso, <span class="st">`</span><span class="at">Sparse biniLasso</span><span class="st">`</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(gene, biniLasso, miniLasso) <span class="sc">%&gt;%</span></span>
 <span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">Caption =</span> <span class="st">"Optimal cut-points found by different methods for the BRCA daatset"</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
@@ -557,7 +578,7 @@ window.Quarto = {
 <tr class="header">
 <th style="text-align: left;" data-quarto-table-cell-role="th">gene</th>
 <th style="text-align: left;" data-quarto-table-cell-role="th">biniLasso</th>
-<th style="text-align: left;" data-quarto-table-cell-role="th">Sparse biniLasso</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">miniLasso</th>
 </tr>
 </thead>
 <tbody>
@@ -738,8 +759,6 @@ window.Quarto = {
 </tr>
 </tbody>
 </table>
-
-
 </div>
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>kirc_cuts_comp <span class="sc">%&gt;%</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(method, opt_cuts) <span class="sc">%&gt;%</span></span>
@@ -760,11 +779,11 @@ window.Quarto = {
 <span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>              <span class="at">values_from =</span> cuts) <span class="sc">%&gt;%</span></span>
 <span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
 <span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">n_bini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(biniLasso)) <span class="sc">*</span> <span class="fu">str_count</span>(biniLasso, <span class="st">","</span>),</span>
-<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>         <span class="at">n_Sbini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(<span class="st">`</span><span class="at">Sparse biniLasso</span><span class="st">`</span>)) <span class="sc">*</span> <span class="fu">str_count</span>(<span class="st">`</span><span class="at">Sparse biniLasso</span><span class="st">`</span>, <span class="st">","</span>),</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>         <span class="at">n_Sbini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(miniLasso)) <span class="sc">*</span> <span class="fu">str_count</span>(miniLasso, <span class="st">","</span>),</span>
 <span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>         <span class="at">n_bina =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(<span class="st">`</span><span class="at">Binacox</span><span class="st">`</span>)) <span class="sc">*</span> <span class="fu">str_count</span>(<span class="st">`</span><span class="at">Binacox</span><span class="st">`</span>, <span class="st">","</span>)) <span class="sc">%&gt;%</span></span>
 <span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>  ungroup <span class="sc">%&gt;%</span></span>
 <span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(n_bini), <span class="fu">desc</span>(n_Sbini), <span class="fu">desc</span>(n_bina)) <span class="sc">%&gt;%</span></span>
-<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(gene, biniLasso, <span class="st">`</span><span class="at">Sparse biniLasso</span><span class="st">`</span>, Binacox) <span class="sc">%&gt;%</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(gene, biniLasso, miniLasso, Binacox) <span class="sc">%&gt;%</span></span>
 <span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">Caption =</span> <span class="st">"Optimal cut-points found by different methods for the KIRC daatset"</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
@@ -773,7 +792,7 @@ window.Quarto = {
 <tr class="header">
 <th style="text-align: left;" data-quarto-table-cell-role="th">gene</th>
 <th style="text-align: left;" data-quarto-table-cell-role="th">biniLasso</th>
-<th style="text-align: left;" data-quarto-table-cell-role="th">Sparse biniLasso</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">miniLasso</th>
 <th style="text-align: left;" data-quarto-table-cell-role="th">Binacox</th>
 </tr>
 </thead>
@@ -978,13 +997,11 @@ window.Quarto = {
 </tr>
 </tbody>
 </table>
-
-
 </div>
 </div>
-</section>
-<section id="compare-models-performance" class="level2">
-<h2 class="anchored" data-anchor-id="compare-models-performance">Compare models’ performance</h2>
+<section id="compare-models-performance" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="compare-models-performance"><span class="header-section-number">4.1</span> Compare models’ performance</h3>
+<p>Once the optimal cut-points are obtained, this section evaluates how well the resulting models perform. The function <code>biniFit()</code> is used to fit Cox proportional hazards models based on the detected cut-points. The fitted models from biniLasso, miniLasso, and Binacox are compared using three performance measures: the Akaike Information Criterion (AIC), the Integrated Brier Score (IBS), and the Concordance Index (C-index). The AIC reflects the trade-off between model fit and complexity, the IBS measures prediction accuracy over time, and the C-index evaluates the model’s ability to rank survival times correctly. The results show that biniLasso and miniLasso consistently outperform Binacox, providing lower AIC and IBS values and higher C-index scores. These findings confirm the improved predictive and computational performance of the proposed methods.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>gbm_cuts_comp <span class="sc">%&gt;%</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(method, opt_cuts) <span class="sc">%&gt;%</span></span>
@@ -1064,24 +1081,22 @@ window.Quarto = {
 </tr>
 <tr class="even">
 <td style="text-align: left;">GBM</td>
-<td style="text-align: left;">Sparse biniLasso</td>
-<td style="text-align: right;">43</td>
-<td style="text-align: right;">2803</td>
-<td style="text-align: right;">0.037</td>
-<td style="text-align: left;">0.779 (0.015)</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">GBM</td>
 <td style="text-align: left;">biniLasso</td>
 <td style="text-align: right;">59</td>
 <td style="text-align: right;">2739</td>
 <td style="text-align: right;">0.030</td>
 <td style="text-align: left;">0.8 (0.013)</td>
 </tr>
+<tr class="odd">
+<td style="text-align: left;">GBM</td>
+<td style="text-align: left;">miniLasso</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">2803</td>
+<td style="text-align: right;">0.037</td>
+<td style="text-align: left;">0.779 (0.015)</td>
+</tr>
 </tbody>
 </table>
-
-
 </div>
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>brca_cuts_comp <span class="sc">%&gt;%</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(method, opt_cuts) <span class="sc">%&gt;%</span></span>
@@ -1161,24 +1176,22 @@ window.Quarto = {
 </tr>
 <tr class="even">
 <td style="text-align: left;">BRCA</td>
-<td style="text-align: left;">Sparse biniLasso</td>
-<td style="text-align: right;">30</td>
-<td style="text-align: right;">1966</td>
-<td style="text-align: right;">0.096</td>
-<td style="text-align: left;">0.761 (0.017)</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">BRCA</td>
 <td style="text-align: left;">biniLasso</td>
 <td style="text-align: right;">35</td>
 <td style="text-align: right;">1974</td>
 <td style="text-align: right;">0.089</td>
 <td style="text-align: left;">0.772 (0.018)</td>
 </tr>
+<tr class="odd">
+<td style="text-align: left;">BRCA</td>
+<td style="text-align: left;">miniLasso</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">1966</td>
+<td style="text-align: right;">0.096</td>
+<td style="text-align: left;">0.761 (0.017)</td>
+</tr>
 </tbody>
 </table>
-
-
 </div>
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>kirc_cuts_comp <span class="sc">%&gt;%</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(method, opt_cuts) <span class="sc">%&gt;%</span></span>
@@ -1243,29 +1256,29 @@ window.Quarto = {
 </tr>
 <tr class="even">
 <td style="text-align: left;">KIRC</td>
-<td style="text-align: left;">Sparse biniLasso</td>
-<td style="text-align: right;">13</td>
-<td style="text-align: right;">2069</td>
-<td style="text-align: right;">0.152</td>
-<td style="text-align: left;">0.764 (0.017)</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">KIRC</td>
 <td style="text-align: left;">biniLasso</td>
 <td style="text-align: right;">30</td>
 <td style="text-align: right;">2073</td>
 <td style="text-align: right;">0.123</td>
 <td style="text-align: left;">0.777 (0.016)</td>
 </tr>
+<tr class="odd">
+<td style="text-align: left;">KIRC</td>
+<td style="text-align: left;">miniLasso</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">2069</td>
+<td style="text-align: right;">0.152</td>
+<td style="text-align: left;">0.764 (0.017)</td>
+</tr>
 </tbody>
 </table>
-
-
 </div>
 </div>
 </section>
-<section id="fixed-number-of-optimal-cut-points" class="level2">
-<h2 class="anchored" data-anchor-id="fixed-number-of-optimal-cut-points">Fixed number of optimal cut-points</h2>
+</section>
+<section id="fixed-number-of-optimal-cut-points" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="fixed-number-of-optimal-cut-points"><span class="header-section-number">5</span> Fixed number of optimal cut-points</h2>
+<p>In some applications, it is desirable to limit the number of cut-points per variable for easier interpretation. This section explains how to use the <code>opt_fixed_nCuts()</code> function to restrict the model to a fixed number of thresholds—here, at most two per feature. The function identifies the best-performing cut-points within this constraint while maintaining good predictive ability. The results are summarized in tables showing the selected thresholds for each gene in all datasets. As it can be seen, limiting the number of cut-points makes the final model simpler and more interpretable, while still keeping its predictive performance close to the unrestricted version. This approach is particularly useful in clinical studies where fewer, well-defined thresholds are preferred.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>gbm_fixedCuts_comp <span class="ot">&lt;-</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">opt_fixed_nCuts</span>(<span class="at">x =</span> gbm_converted_obj<span class="sc">$</span>x,</span>
@@ -1318,10 +1331,10 @@ window.Quarto = {
 <span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a>              <span class="at">values_from =</span> cuts) <span class="sc">%&gt;%</span></span>
 <span id="cb13-50"><a href="#cb13-50" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
 <span id="cb13-51"><a href="#cb13-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">n_bini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(biniLasso)) <span class="sc">*</span> <span class="fu">str_count</span>(biniLasso, <span class="st">","</span>),</span>
-<span id="cb13-52"><a href="#cb13-52" aria-hidden="true" tabindex="-1"></a>         <span class="at">n_Sbini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(<span class="st">`</span><span class="at">Sparse biniLasso</span><span class="st">`</span>)) <span class="sc">*</span> <span class="fu">str_count</span>(<span class="st">`</span><span class="at">Sparse biniLasso</span><span class="st">`</span>, <span class="st">","</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb13-52"><a href="#cb13-52" aria-hidden="true" tabindex="-1"></a>         <span class="at">n_Sbini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(miniLasso)) <span class="sc">*</span> <span class="fu">str_count</span>(miniLasso, <span class="st">","</span>)) <span class="sc">%&gt;%</span></span>
 <span id="cb13-53"><a href="#cb13-53" aria-hidden="true" tabindex="-1"></a>  ungroup <span class="sc">%&gt;%</span></span>
 <span id="cb13-54"><a href="#cb13-54" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(n_bini), <span class="fu">desc</span>(n_Sbini)) <span class="sc">%&gt;%</span></span>
-<span id="cb13-55"><a href="#cb13-55" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(gene, biniLasso, <span class="st">`</span><span class="at">Sparse biniLasso</span><span class="st">`</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb13-55"><a href="#cb13-55" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(gene, biniLasso, miniLasso) <span class="sc">%&gt;%</span></span>
 <span id="cb13-56"><a href="#cb13-56" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">Caption =</span> <span class="st">"Optimal cut-points found by different methods for the GBM daatset"</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb13-57"><a href="#cb13-57" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
@@ -1330,7 +1343,7 @@ window.Quarto = {
 <tr class="header">
 <th style="text-align: left;" data-quarto-table-cell-role="th">gene</th>
 <th style="text-align: left;" data-quarto-table-cell-role="th">biniLasso</th>
-<th style="text-align: left;" data-quarto-table-cell-role="th">Sparse biniLasso</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">miniLasso</th>
 </tr>
 </thead>
 <tbody>
@@ -1556,9 +1569,10 @@ window.Quarto = {
 </tr>
 </tbody>
 </table>
-
-
 </div>
+</div>
+<p>It should be noted that some genes show only one threshold or <code>NA</code> instead of two. This happens for two main reasons. In cases where two detected thresholds are very close to each other, the algorithm treats them as overlapping and merges them into a single effective cut-point, since they represent nearly the same boundary in the variable’s range. This is often observed when the predictor has a limited range or when the outcome does not vary much between nearby values. On the other hand, <code>NA</code> values occur when no meaningful threshold is detected for that variable. This typically happens when the variable shows no strong association with the outcome after penalization, or when its effect is roughly linear and cannot be improved by categorization. In both cases, the algorithm avoids introducing unnecessary or redundant thresholds, resulting in a simpler and more interpretable model.</p>
+<div class="cell">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>brca_fixedCuts_comp <span class="sc">%&gt;%</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(method, opt_cuts) <span class="sc">%&gt;%</span></span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
@@ -1575,10 +1589,10 @@ window.Quarto = {
 <span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>              <span class="at">values_from =</span> cuts) <span class="sc">%&gt;%</span></span>
 <span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
 <span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">n_bini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(biniLasso)) <span class="sc">*</span> <span class="fu">str_count</span>(biniLasso, <span class="st">","</span>),</span>
-<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>         <span class="at">n_Sbini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(<span class="st">`</span><span class="at">Sparse biniLasso</span><span class="st">`</span>)) <span class="sc">*</span> <span class="fu">str_count</span>(<span class="st">`</span><span class="at">Sparse biniLasso</span><span class="st">`</span>, <span class="st">","</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>         <span class="at">n_Sbini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(miniLasso)) <span class="sc">*</span> <span class="fu">str_count</span>(miniLasso, <span class="st">","</span>)) <span class="sc">%&gt;%</span></span>
 <span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>  ungroup <span class="sc">%&gt;%</span></span>
 <span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(n_bini), <span class="fu">desc</span>(n_Sbini)) <span class="sc">%&gt;%</span></span>
-<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(gene, biniLasso, <span class="st">`</span><span class="at">Sparse biniLasso</span><span class="st">`</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(gene, biniLasso, miniLasso) <span class="sc">%&gt;%</span></span>
 <span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">Caption =</span> <span class="st">"Optimal cut-points found by different methods for the BRCA daatset"</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
@@ -1587,7 +1601,7 @@ window.Quarto = {
 <tr class="header">
 <th style="text-align: left;" data-quarto-table-cell-role="th">gene</th>
 <th style="text-align: left;" data-quarto-table-cell-role="th">biniLasso</th>
-<th style="text-align: left;" data-quarto-table-cell-role="th">Sparse biniLasso</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">miniLasso</th>
 </tr>
 </thead>
 <tbody>
@@ -1848,8 +1862,6 @@ window.Quarto = {
 </tr>
 </tbody>
 </table>
-
-
 </div>
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>kirc_fixedCuts_comp <span class="sc">%&gt;%</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(method, opt_cuts) <span class="sc">%&gt;%</span></span>
@@ -1867,10 +1879,10 @@ window.Quarto = {
 <span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>              <span class="at">values_from =</span> cuts) <span class="sc">%&gt;%</span></span>
 <span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
 <span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">n_bini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(biniLasso)) <span class="sc">*</span> <span class="fu">str_count</span>(biniLasso, <span class="st">","</span>),</span>
-<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>         <span class="at">n_Sbini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(<span class="st">`</span><span class="at">Sparse biniLasso</span><span class="st">`</span>)) <span class="sc">*</span> <span class="fu">str_count</span>(<span class="st">`</span><span class="at">Sparse biniLasso</span><span class="st">`</span>, <span class="st">","</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>         <span class="at">n_Sbini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(miniLasso)) <span class="sc">*</span> <span class="fu">str_count</span>(miniLasso, <span class="st">","</span>)) <span class="sc">%&gt;%</span></span>
 <span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>  ungroup <span class="sc">%&gt;%</span></span>
 <span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(n_bini), <span class="fu">desc</span>(n_Sbini)) <span class="sc">%&gt;%</span></span>
-<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(gene, biniLasso, <span class="st">`</span><span class="at">Sparse biniLasso</span><span class="st">`</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(gene, biniLasso, miniLasso) <span class="sc">%&gt;%</span></span>
 <span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">Caption =</span> <span class="st">"Optimal cut-points found by different methods for the KIRC daatset"</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
@@ -1879,7 +1891,7 @@ window.Quarto = {
 <tr class="header">
 <th style="text-align: left;" data-quarto-table-cell-role="th">gene</th>
 <th style="text-align: left;" data-quarto-table-cell-role="th">biniLasso</th>
-<th style="text-align: left;" data-quarto-table-cell-role="th">Sparse biniLasso</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">miniLasso</th>
 </tr>
 </thead>
 <tbody>
@@ -2050,11 +2062,11 @@ window.Quarto = {
 </tr>
 </tbody>
 </table>
-
-
 </div>
 </div>
-<p>Compare performance of the models:</p>
+<section id="compare-models-performance-1" class="level3" data-number="5.1">
+<h3 data-number="5.1" class="anchored" data-anchor-id="compare-models-performance-1"><span class="header-section-number">5.1</span> Compare models’ performance:</h3>
+<p>The final part summarizes the main outcomes of the vignette and presents concise comparison tables for the GBM, BRCA, and KIRC datasets. The tables show the detected cut-points across biniLasso, miniLasso, and Binacox, confirming that the proposed cumulative binarization and uniLasso regularization result in models that are both interpretable and computationally efficient. The findings in this section are consistent with the simulation and real-data results presented in the main article, demonstrating the practical advantages of biniLasso and miniLasso for high-dimensional survival analysis.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>gbm_fixedCuts_comp <span class="sc">%&gt;%</span></span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(method, opt_cuts) <span class="sc">%&gt;%</span></span>
@@ -2107,24 +2119,22 @@ window.Quarto = {
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">GBM</td>
-<td style="text-align: left;">Sparse biniLasso</td>
-<td style="text-align: right;">39</td>
-<td style="text-align: right;">2806</td>
-<td style="text-align: right;">0.037</td>
-<td style="text-align: left;">0.777 (0.015)</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">GBM</td>
 <td style="text-align: left;">biniLasso</td>
 <td style="text-align: right;">50</td>
 <td style="text-align: right;">2801</td>
 <td style="text-align: right;">0.034</td>
 <td style="text-align: left;">0.777 (0.015)</td>
 </tr>
+<tr class="even">
+<td style="text-align: left;">GBM</td>
+<td style="text-align: left;">miniLasso</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">2806</td>
+<td style="text-align: right;">0.037</td>
+<td style="text-align: left;">0.777 (0.015)</td>
+</tr>
 </tbody>
 </table>
-
-
 </div>
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>brca_fixedCuts_comp <span class="sc">%&gt;%</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(method, opt_cuts) <span class="sc">%&gt;%</span></span>
@@ -2177,24 +2187,22 @@ window.Quarto = {
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">BRCA</td>
-<td style="text-align: left;">Sparse biniLasso</td>
-<td style="text-align: right;">42</td>
-<td style="text-align: right;">1958</td>
-<td style="text-align: right;">0.084</td>
-<td style="text-align: left;">0.783 (0.016)</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">BRCA</td>
 <td style="text-align: left;">biniLasso</td>
 <td style="text-align: right;">50</td>
 <td style="text-align: right;">1956</td>
 <td style="text-align: right;">0.078</td>
 <td style="text-align: left;">0.786 (0.016)</td>
 </tr>
+<tr class="even">
+<td style="text-align: left;">BRCA</td>
+<td style="text-align: left;">miniLasso</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">1958</td>
+<td style="text-align: right;">0.084</td>
+<td style="text-align: left;">0.783 (0.016)</td>
+</tr>
 </tbody>
 </table>
-
-
 </div>
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>kirc_fixedCuts_comp <span class="sc">%&gt;%</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(method, opt_cuts) <span class="sc">%&gt;%</span></span>
@@ -2247,264 +2255,266 @@ window.Quarto = {
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">KIRC</td>
-<td style="text-align: left;">Sparse biniLasso</td>
-<td style="text-align: right;">16</td>
-<td style="text-align: right;">2070</td>
-<td style="text-align: right;">0.155</td>
-<td style="text-align: left;">0.758 (0.017)</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">KIRC</td>
 <td style="text-align: left;">biniLasso</td>
 <td style="text-align: right;">36</td>
 <td style="text-align: right;">2081</td>
 <td style="text-align: right;">0.119</td>
 <td style="text-align: left;">0.785 (0.016)</td>
 </tr>
+<tr class="even">
+<td style="text-align: left;">KIRC</td>
+<td style="text-align: left;">miniLasso</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">2070</td>
+<td style="text-align: right;">0.155</td>
+<td style="text-align: left;">0.758 (0.017)</td>
+</tr>
 </tbody>
 </table>
-
-
 </div>
 </div>
+</section>
 </section>
 
 </main>
 <!-- /main column -->
 <script id="quarto-html-after-body" type="application/javascript">
-window.document.addEventListener("DOMContentLoaded", function (event) {
-  const toggleBodyColorMode = (bsSheetEl) => {
-    const mode = bsSheetEl.getAttribute("data-mode");
-    const bodyEl = window.document.querySelector("body");
-    if (mode === "dark") {
-      bodyEl.classList.add("quarto-dark");
-      bodyEl.classList.remove("quarto-light");
-    } else {
-      bodyEl.classList.add("quarto-light");
-      bodyEl.classList.remove("quarto-dark");
-    }
-  }
-  const toggleBodyColorPrimary = () => {
-    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
-    if (bsSheetEl) {
-      toggleBodyColorMode(bsSheetEl);
-    }
-  }
-  toggleBodyColorPrimary();  
-  const icon = "";
-  const anchorJS = new window.AnchorJS();
-  anchorJS.options = {
-    placement: 'right',
-    icon: icon
-  };
-  anchorJS.add('.anchored');
-  const isCodeAnnotation = (el) => {
-    for (const clz of el.classList) {
-      if (clz.startsWith('code-annotation-')) {                     
-        return true;
-      }
-    }
-    return false;
-  }
-  const onCopySuccess = function(e) {
-    // button target
-    const button = e.trigger;
-    // don't keep focus
-    button.blur();
-    // flash "checked"
-    button.classList.add('code-copy-button-checked');
-    var currentTitle = button.getAttribute("title");
-    button.setAttribute("title", "Copied!");
-    let tooltip;
-    if (window.bootstrap) {
-      button.setAttribute("data-bs-toggle", "tooltip");
-      button.setAttribute("data-bs-placement", "left");
-      button.setAttribute("data-bs-title", "Copied!");
-      tooltip = new bootstrap.Tooltip(button, 
-        { trigger: "manual", 
-          customClass: "code-copy-button-tooltip",
-          offset: [0, -8]});
-      tooltip.show();    
-    }
-    setTimeout(function() {
-      if (tooltip) {
-        tooltip.hide();
-        button.removeAttribute("data-bs-title");
-        button.removeAttribute("data-bs-toggle");
-        button.removeAttribute("data-bs-placement");
-      }
-      button.setAttribute("title", currentTitle);
-      button.classList.remove('code-copy-button-checked');
-    }, 1000);
-    // clear code selection
-    e.clearSelection();
-  }
-  const getTextToCopy = function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-  }
-  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
-    text: getTextToCopy
-  });
-  clipboard.on('success', onCopySuccess);
-  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
-    // For code content inside modals, clipBoardJS needs to be initialized with a container option
-    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
-    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
-      text: getTextToCopy,
-      container: window.document.getElementById('quarto-embedded-source-code-modal')
-    });
-    clipboardModal.on('success', onCopySuccess);
-  }
-    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
-    var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp('/' + window.location.host + '/');
-    var isInternal = (href) => {
-        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
-    }
-    // Inspect non-navigation links and adorn them if external
- 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
-    for (var i=0; i<links.length; i++) {
-      const link = links[i];
-      if (!isInternal(link.href)) {
-        // undo the damage that might have been done by quarto-nav.js in the case of
-        // links that we want to consider external
-        if (link.dataset.originalHref !== undefined) {
-          link.href = link.dataset.originalHref;
-        }
-      }
-    }
-  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
-    const config = {
-      allowHTML: true,
-      maxWidth: 500,
-      delay: 100,
-      arrow: false,
-      appendTo: function(el) {
-          return el.parentElement;
-      },
-      interactive: true,
-      interactiveBorder: 10,
-      theme: 'quarto',
-      placement: 'bottom-start',
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
     };
-    if (contentFn) {
-      config.content = contentFn;
-    }
-    if (onTriggerFn) {
-      config.onTrigger = onTriggerFn;
-    }
-    if (onUntriggerFn) {
-      config.onUntrigger = onUntriggerFn;
-    }
-    window.tippy(el, config); 
-  }
-  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
-  for (var i=0; i<noterefs.length; i++) {
-    const ref = noterefs[i];
-    tippyHover(ref, function() {
-      // use id or data attribute instead here
-      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
-      try { href = new URL(href).hash; } catch {}
-      const id = href.replace(/^#\/?/, "");
-      const note = window.document.getElementById(id);
-      if (note) {
-        return note.innerHTML;
-      } else {
-        return "";
-      }
-    });
-  }
-  const xrefs = window.document.querySelectorAll('a.quarto-xref');
-  const processXRef = (id, note) => {
-    // Strip column container classes
-    const stripColumnClz = (el) => {
-      el.classList.remove("page-full", "page-columns");
-      if (el.children) {
-        for (const child of el.children) {
-          stripColumnClz(child);
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
         }
       }
+      return false;
     }
-    stripColumnClz(note)
-    if (id === null || id.startsWith('sec-')) {
-      // Special case sections, only their first couple elements
-      const container = document.createElement("div");
-      if (note.children && note.children.length > 2) {
-        container.appendChild(note.children[0].cloneNode(true));
-        for (let i = 1; i < note.children.length; i++) {
-          const child = note.children[i];
-          if (child.tagName === "P" && child.innerText === "") {
-            continue;
-          } else {
-            container.appendChild(child.cloneNode(true));
-            break;
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
           }
         }
-        if (window.Quarto?.typesetMath) {
-          window.Quarto.typesetMath(container);
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
         }
-        return container.innerHTML
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
       } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
         if (window.Quarto?.typesetMath) {
           window.Quarto.typesetMath(note);
         }
-        return note.innerHTML;
-      }
-    } else {
-      // Remove any anchor links if they are present
-      const anchorLink = note.querySelector('a.anchorjs-link');
-      if (anchorLink) {
-        anchorLink.remove();
-      }
-      if (window.Quarto?.typesetMath) {
-        window.Quarto.typesetMath(note);
-      }
-      // TODO in 1.5, we should make sure this works without a callout special case
-      if (note.classList.contains("callout")) {
-        return note.outerHTML;
-      } else {
-        return note.innerHTML;
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
       }
     }
-  }
-  for (var i=0; i<xrefs.length; i++) {
-    const xref = xrefs[i];
-    tippyHover(xref, undefined, function(instance) {
-      instance.disable();
-      let url = xref.getAttribute('href');
-      let hash = undefined; 
-      if (url.startsWith('#')) {
-        hash = url;
-      } else {
-        try { hash = new URL(url).hash; } catch {}
-      }
-      if (hash) {
-        const id = hash.replace(/^#\/?/, "");
-        const note = window.document.getElementById(id);
-        if (note !== null) {
-          try {
-            const html = processXRef(id, note.cloneNode(true));
-            instance.setContent(html);
-          } finally {
-            instance.enable();
-            instance.show();
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
           }
         } else {
-          // See if we can fetch this
-          fetch(url.split('#')[0])
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
           .then(res => res.text())
           .then(html => {
             const parser = new DOMParser();
             const htmlDoc = parser.parseFromString(html, "text/html");
-            const note = htmlDoc.getElementById(id);
+            const note = htmlDoc.querySelector('main.content');
             if (note !== null) {
-              const html = processXRef(id, note);
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
               instance.setContent(html);
             } 
           }).finally(() => {
@@ -2512,185 +2522,161 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
             instance.show();
           });
         }
-      } else {
-        // See if we can fetch a full url (with no hash to target)
-        // This is a special case and we should probably do some content thinning / targeting
-        fetch(url)
-        .then(res => res.text())
-        .then(html => {
-          const parser = new DOMParser();
-          const htmlDoc = parser.parseFromString(html, "text/html");
-          const note = htmlDoc.querySelector('main.content');
-          if (note !== null) {
-            // This should only happen for chapter cross references
-            // (since there is no id in the URL)
-            // remove the first header
-            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
-              note.children[0].remove();
-            }
-            const html = processXRef(null, note);
-            instance.setContent(html);
-          } 
-        }).finally(() => {
-          instance.enable();
-          instance.show();
-        });
-      }
-    }, function(instance) {
-    });
-  }
-      let selectedAnnoteEl;
-      const selectorForAnnotation = ( cell, annotation) => {
-        let cellAttr = 'data-code-cell="' + cell + '"';
-        let lineAttr = 'data-code-annotation="' +  annotation + '"';
-        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
-        return selector;
-      }
-      const selectCodeLines = (annoteEl) => {
-        const doc = window.document;
-        const targetCell = annoteEl.getAttribute("data-target-cell");
-        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
-        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
-        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
-        const lineIds = lines.map((line) => {
-          return targetCell + "-" + line;
-        })
-        let top = null;
-        let height = null;
-        let parent = null;
-        if (lineIds.length > 0) {
-            //compute the position of the single el (top and bottom and make a div)
-            const el = window.document.getElementById(lineIds[0]);
-            top = el.offsetTop;
-            height = el.offsetHeight;
-            parent = el.parentElement.parentElement;
-          if (lineIds.length > 1) {
-            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-            height = bottom - top;
-          }
-          if (top !== null && height !== null && parent !== null) {
-            // cook up a div (if necessary) and position it 
-            let div = window.document.getElementById("code-annotation-line-highlight");
-            if (div === null) {
-              div = window.document.createElement("div");
-              div.setAttribute("id", "code-annotation-line-highlight");
-              div.style.position = 'absolute';
-              parent.appendChild(div);
-            }
-            div.style.top = top - 2 + "px";
-            div.style.height = height + 4 + "px";
-            div.style.left = 0;
-            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-            if (gutterDiv === null) {
-              gutterDiv = window.document.createElement("div");
-              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-              gutterDiv.style.position = 'absolute';
-              const codeCell = window.document.getElementById(targetCell);
-              const gutter = codeCell.querySelector('.code-annotation-gutter');
-              gutter.appendChild(gutterDiv);
-            }
-            gutterDiv.style.top = top - 2 + "px";
-            gutterDiv.style.height = height + 4 + "px";
-          }
-          selectedAnnoteEl = annoteEl;
-        }
-      };
-      const unselectCodeLines = () => {
-        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
-        elementsIds.forEach((elId) => {
-          const div = window.document.getElementById(elId);
-          if (div) {
-            div.remove();
-          }
-        });
-        selectedAnnoteEl = undefined;
-      };
-        // Handle positioning of the toggle
-    window.addEventListener(
-      "resize",
-      throttle(() => {
-        elRect = undefined;
-        if (selectedAnnoteEl) {
-          selectCodeLines(selectedAnnoteEl);
-        }
-      }, 10)
-    );
-    function throttle(fn, ms) {
-    let throttle = false;
-    let timer;
-      return (...args) => {
-        if(!throttle) { // first call gets through
-            fn.apply(this, args);
-            throttle = true;
-        } else { // all the others get throttled
-            if(timer) clearTimeout(timer); // cancel #2
-            timer = setTimeout(() => {
-              fn.apply(this, args);
-              timer = throttle = false;
-            }, ms);
-        }
-      };
-    }
-      // Attach click handler to the DT
-      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
-      for (const annoteDlNode of annoteDls) {
-        annoteDlNode.addEventListener('click', (event) => {
-          const clickedEl = event.target;
-          if (clickedEl !== selectedAnnoteEl) {
-            unselectCodeLines();
-            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
-            if (activeEl) {
-              activeEl.classList.remove('code-annotation-active');
-            }
-            selectCodeLines(clickedEl);
-            clickedEl.classList.add('code-annotation-active');
-          } else {
-            // Unselect the line
-            unselectCodeLines();
-            clickedEl.classList.remove('code-annotation-active');
-          }
-        });
-      }
-  const findCites = (el) => {
-    const parentEl = el.parentElement;
-    if (parentEl) {
-      const cites = parentEl.dataset.cites;
-      if (cites) {
-        return {
-          el,
-          cites: cites.split(' ')
-        };
-      } else {
-        return findCites(el.parentElement)
-      }
-    } else {
-      return undefined;
-    }
-  };
-  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
-  for (var i=0; i<bibliorefs.length; i++) {
-    const ref = bibliorefs[i];
-    const citeInfo = findCites(ref);
-    if (citeInfo) {
-      tippyHover(citeInfo.el, function() {
-        var popup = window.document.createElement('div');
-        citeInfo.cites.forEach(function(cite) {
-          var citeDiv = window.document.createElement('div');
-          citeDiv.classList.add('hanging-indent');
-          citeDiv.classList.add('csl-entry');
-          var biblioDiv = window.document.getElementById('ref-' + cite);
-          if (biblioDiv) {
-            citeDiv.innerHTML = biblioDiv.innerHTML;
-          }
-          popup.appendChild(citeDiv);
-        });
-        return popup.innerHTML;
+      }, function(instance) {
       });
     }
-  }
-});
-</script>
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
 </div> <!-- /content -->
 
 
