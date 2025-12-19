@@ -1,0 +1,2685 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Abdollah Safari">
+<meta name="author" content="Hamed Helisaz">
+
+<title>biniLasso vignette</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="biniLasso vignette_files/libs/clipboard/clipboard.min.js"></script>
+<script src="biniLasso vignette_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="biniLasso vignette_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="biniLasso vignette_files/libs/quarto-html/popper.min.js"></script>
+<script src="biniLasso vignette_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="biniLasso vignette_files/libs/quarto-html/anchor.min.js"></script>
+<link href="biniLasso vignette_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="biniLasso vignette_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="biniLasso vignette_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="biniLasso vignette_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="biniLasso vignette_files/libs/bootstrap/bootstrap-7f5740c09e508315c41a07c582dff588.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="biniLasso vignette_files/libs/kePrint-0.0.1/kePrint.js"></script>
+
+<link href="biniLasso vignette_files/libs/lightable-0.0.1/lightable.css" rel="stylesheet">
+
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction"><span class="header-section-number">1</span> Introduction</a></li>
+  <li><a href="#initial-setup" id="toc-initial-setup" class="nav-link" data-scroll-target="#initial-setup"><span class="header-section-number">2</span> Initial setup</a></li>
+  <li><a href="#data-preproccessing" id="toc-data-preproccessing" class="nav-link" data-scroll-target="#data-preproccessing"><span class="header-section-number">3</span> Data preproccessing</a></li>
+  <li><a href="#obtain-optimal-cut-points" id="toc-obtain-optimal-cut-points" class="nav-link" data-scroll-target="#obtain-optimal-cut-points"><span class="header-section-number">4</span> Obtain optimal cut-points</a>
+  <ul>
+  <li><a href="#compare-models-performance" id="toc-compare-models-performance" class="nav-link" data-scroll-target="#compare-models-performance"><span class="header-section-number">4.1</span> Compare models’ performance</a></li>
+  </ul></li>
+  <li><a href="#fixed-number-of-optimal-cut-points" id="toc-fixed-number-of-optimal-cut-points" class="nav-link" data-scroll-target="#fixed-number-of-optimal-cut-points"><span class="header-section-number">5</span> Fixed number of optimal cut-points</a>
+  <ul>
+  <li><a href="#compare-models-performance-1" id="toc-compare-models-performance-1" class="nav-link" data-scroll-target="#compare-models-performance-1"><span class="header-section-number">5.1</span> Compare models’ performance:</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">biniLasso vignette</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Authors</div>
+    <div class="quarto-title-meta-contents">
+             <p>Abdollah Safari </p>
+             <p>Hamed Helisaz </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introduction" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="introduction"><span class="header-section-number">1</span> Introduction</h2>
+<p>The biniLasso and its sparse variant, miniLasso, are novel methods for prognostic analysis of high-dimensional survival data that enable detection of multiple cut-points per continuous feature to categorize them for obtaining more interpretable results from prediction models. This approach leverages the Cox proportional hazards model with two key innovations: (1) a cumulative binarization scheme with L1-penalized coefficients operating on context-dependent cut-point candidates, and (2) for miniLasso, additional uniLasso regularization, a recently developed two-stage regularized regression, to enforce sparsity while preserving univariate coefficient patterns. For details, see the original paper by Safari et al.&nbsp;available at <a href="https://arxiv.org/abs/2503.16687" class="uri">https://arxiv.org/abs/2503.16687</a></p>
+</section>
+<section id="initial-setup" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="initial-setup"><span class="header-section-number">2</span> Initial setup</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(magrittr)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(survival)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(glmnet)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pec)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(uniLasso)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(kableExtra)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(biniLasso)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>gbm_data_fnl <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">"data/gbm_fnl.rds"</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>brca_data_fnl <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">"data/brca_fnl.rds"</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>kirc_data_fnl <span class="ot">&lt;-</span> <span class="fu">read_rds</span>(<span class="st">"data/kirc_fnl.rds"</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(gbm_data_fnl) <span class="ot">&lt;-</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  stringr<span class="sc">::</span><span class="fu">str_replace_all</span>(<span class="fu">colnames</span>(gbm_data_fnl), <span class="st">"-"</span>, <span class="st">"_"</span>)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(brca_data_fnl) <span class="ot">&lt;-</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  stringr<span class="sc">::</span><span class="fu">str_replace_all</span>(<span class="fu">colnames</span>(brca_data_fnl), <span class="st">"-"</span>, <span class="st">"_"</span>)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(kirc_data_fnl) <span class="ot">&lt;-</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  stringr<span class="sc">::</span><span class="fu">str_replace_all</span>(<span class="fu">colnames</span>(kirc_data_fnl), <span class="st">"-"</span>, <span class="st">"_"</span>)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>bussy_est <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/binacox_tcga_cuts.csv"</span>,</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>                      <span class="at">header =</span> <span class="cn">TRUE</span>, <span class="at">row.names =</span> <span class="cn">NULL</span>)</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>Bussy_cuts <span class="ot">&lt;-</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  bussy_est[<span class="sc">-</span><span class="dv">1</span>, ] <span class="sc">%&gt;%</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(data, cut_points_estimate_x) <span class="sc">%&gt;%</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">opt_cuts_bina =</span> <span class="fu">list</span>(<span class="fu">cuts_to_list</span>(cut_points_estimate_x))) <span class="sc">%&gt;%</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(data, opt_cuts_bina) <span class="sc">%&gt;%</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>  ungroup</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(Bussy_cuts<span class="sc">$</span>opt_cuts_bina[Bussy_cuts<span class="sc">$</span>data <span class="sc">==</span> <span class="st">"GBM"</span>][[<span class="dv">1</span>]]) <span class="ot">&lt;-</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(gbm_data_fnl)[<span class="sc">!</span> <span class="fu">colnames</span>(gbm_data_fnl) <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"barcode"</span>, <span class="st">"vital_status"</span>, <span class="st">"tte"</span>)]</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(Bussy_cuts<span class="sc">$</span>opt_cuts_bina[Bussy_cuts<span class="sc">$</span>data <span class="sc">==</span> <span class="st">"KIRC"</span>][[<span class="dv">1</span>]]) <span class="ot">&lt;-</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(kirc_data_fnl)[<span class="sc">!</span> <span class="fu">colnames</span>(kirc_data_fnl) <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"barcode"</span>, <span class="st">"vital_status"</span>, <span class="st">"tte"</span>)]</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(Bussy_cuts<span class="sc">$</span>opt_cuts_bina[Bussy_cuts<span class="sc">$</span>data <span class="sc">==</span> <span class="st">"BRCA"</span>][[<span class="dv">1</span>]]) <span class="ot">&lt;-</span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(brca_data_fnl)[<span class="sc">!</span> <span class="fu">colnames</span>(brca_data_fnl) <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"barcode"</span>, <span class="st">"vital_status"</span>, <span class="st">"tte"</span>)]</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>n_bins <span class="ot">&lt;-</span> <span class="dv">50</span></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="data-preproccessing" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="data-preproccessing"><span class="header-section-number">3</span> Data preproccessing</h2>
+<p>Before fitting the model to extract optimal cut-points, one needs to specify cut-points candidates. We will do this by using the <span class="math inline">\(num_to_cat\)</span> function. This can be done either by simply specifying number of bins for numeric covariates (set <span class="math inline">\(n_bins\)</span> argument), or more explicitly, passing the candidate cut-points per covariate by setting the cuts_list argument (see function help for more details and a simple example). Here, we use the former and set the number of bins to 50 for all genes.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>gbm_converted_obj <span class="ot">&lt;-</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cumBinarizer</span>(<span class="at">data =</span> gbm_data_fnl,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">cols =</span> <span class="fu">colnames</span>(gbm_data_fnl)[<span class="sc">!</span> <span class="fu">colnames</span>(gbm_data_fnl) <span class="sc">%in%</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>                                             <span class="fu">c</span>(<span class="st">"barcode"</span>, <span class="st">"vital_status"</span>, <span class="st">"tte"</span>)],</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>               <span class="at">method =</span> <span class="st">"quantile"</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>               <span class="at">n_bins =</span> <span class="dv">50</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>brca_converted_obj <span class="ot">&lt;-</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cumBinarizer</span>(<span class="at">data =</span> brca_data_fnl,</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>             <span class="at">cols =</span> <span class="fu">colnames</span>(brca_data_fnl)[<span class="sc">!</span> <span class="fu">colnames</span>(brca_data_fnl) <span class="sc">%in%</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>                                             <span class="fu">c</span>(<span class="st">"barcode"</span>, <span class="st">"vital_status"</span>, <span class="st">"tte"</span>)],</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>             <span class="at">method =</span> <span class="st">"quantile"</span>,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>             <span class="at">n_bins =</span> <span class="dv">50</span>)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>kirc_converted_obj <span class="ot">&lt;-</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cumBinarizer</span>(<span class="at">data =</span> kirc_data_fnl,</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>             <span class="at">cols =</span> <span class="fu">colnames</span>(kirc_data_fnl)[<span class="sc">!</span> <span class="fu">colnames</span>(kirc_data_fnl) <span class="sc">%in%</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>                                             <span class="fu">c</span>(<span class="st">"barcode"</span>, <span class="st">"vital_status"</span>, <span class="st">"tte"</span>)],</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>             <span class="at">method =</span> <span class="st">"quantile"</span>,</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>             <span class="at">n_bins =</span> <span class="dv">50</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Candidate cut-points for the first gene (COPS7B) in the GBM dataset:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>gbm_converted_obj<span class="sc">$</span>x_cuts[[<span class="dv">1</span>]][[<span class="dv">1</span>]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] -0.120676799 -0.111887338 -0.105920688 -0.101116373 -0.097607231
+ [6] -0.095670007 -0.094208786 -0.089869405 -0.089061306 -0.086847336
+[11] -0.081633436 -0.079574444 -0.077205496 -0.075799625 -0.074559802
+[16] -0.072788626 -0.071493453 -0.069069156 -0.068072869 -0.064364469
+[21] -0.060202206 -0.052076935 -0.045180418 -0.037586501 -0.025797110
+[26] -0.010066852 -0.003912015  0.027426731  0.033005936  0.042448519
+[31]  0.067078936  0.090491670  0.107849196  0.131184441  0.149117599
+[36]  0.164737158  0.179360430  0.207699248  0.218005279  0.325183572
+[41]  0.370658518  0.467453291  0.568211071  0.646928778  0.708731754
+[46]  0.777231989  0.983053720  2.064810586  3.174076031  3.678285584</code></pre>
+</div>
+</div>
+<p>Candidate cut-points for the second gene (CYP3A7_CYP3A51P) in the GBM dataset:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>gbm_converted_obj<span class="sc">$</span>x_cuts[[<span class="dv">1</span>]][[<span class="dv">2</span>]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] 0.1128850 0.1410298 0.1474293 0.1519350 0.1584651 0.1621220 0.1652564
+ [8] 0.1695010 0.1820388 0.2002578 0.2105754 0.2154077 0.2255946 0.2418546
+[15] 0.2715013 0.2914834 0.3366718 0.3506462 0.4023646 0.4070663 0.4095478
+[22] 0.4286157 0.4517323 0.5712332 0.6358160 0.6624588 0.7786294 0.9674801
+[29] 1.0773818 1.1146035 1.3831868 1.8145657 2.0600324 2.6422568 3.1741340
+[36] 4.4748008 7.1954394</code></pre>
+</div>
+</div>
+<p>As it can be seen, the first gene has 50 candidate cut-points as it was indicated in the input arguments of the cumBinarizer function. However, for the second gene, due to limited number of unique values in the gene expression data in the given gene, the function returns only 37 candidate cut-points, and therefore, the counts of different levels of the resulting categorical variables after categorization will be unbalanced.</p>
+</section>
+<section id="obtain-optimal-cut-points" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="obtain-optimal-cut-points"><span class="header-section-number">4</span> Obtain optimal cut-points</h2>
+<p>After generating candidate cut-points, the next step is to identify which cut-points are optimal based on the outcome variable. This is done using the <code>opt_cuts_finder()</code> function, which fits Lasso-regularized Cox models to select the most informative thresholds. The argument <code>method = "both"</code> runs both biniLasso and miniLasso at once, so their results can be compared directly. The function also uses cross-validation to choose the best regularization parameter. The output provides a list of estimated cut-points for each gene across all datasets (GBM, BRCA, and KIRC). The results are then displayed in tables showing the detected cut-points from both methods, making it easy to compare how biniLasso and miniLasso differ in their selected thresholds.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>gbm_cuts_comp <span class="ot">&lt;-</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">opt_cuts_finder</span>(<span class="at">x =</span> gbm_converted_obj<span class="sc">$</span>x,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>                  <span class="at">y =</span> survival<span class="sc">::</span><span class="fu">Surv</span>(gbm_data_fnl<span class="sc">$</span>tte, gbm_data_fnl<span class="sc">$</span>vital_status),</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>                  <span class="at">method =</span> <span class="st">"both"</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>                  <span class="at">family =</span> <span class="st">"cox"</span>,</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>                  <span class="at">lasso_rule =</span> <span class="st">"min"</span>,</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>                  <span class="at">lasso_nfolds =</span> <span class="dv">10</span>,</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>                  <span class="at">cols =</span> <span class="fu">colnames</span>(gbm_data_fnl)[<span class="sc">!</span> <span class="fu">colnames</span>(gbm_data_fnl) <span class="sc">%in%</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>                                                  <span class="fu">c</span>(<span class="st">"barcode"</span>, <span class="st">"vital_status"</span>, <span class="st">"tte"</span>)],</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>                  <span class="at">x_cuts =</span> gbm_converted_obj<span class="sc">$</span>x_cuts)</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>brca_cuts_comp <span class="ot">&lt;-</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">opt_cuts_finder</span>(<span class="at">x =</span> brca_converted_obj<span class="sc">$</span>x,</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>                  <span class="at">y =</span> survival<span class="sc">::</span><span class="fu">Surv</span>(brca_data_fnl<span class="sc">$</span>tte, brca_data_fnl<span class="sc">$</span>vital_status),</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>                  <span class="at">method =</span> <span class="st">"both"</span>,</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>                  <span class="at">family =</span> <span class="st">"cox"</span>,</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>                  <span class="at">lasso_rule =</span> <span class="st">"min"</span>,</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>                  <span class="at">lasso_nfolds =</span> <span class="dv">10</span>,</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>                  <span class="at">cols =</span> <span class="fu">colnames</span>(brca_data_fnl)[<span class="sc">!</span> <span class="fu">colnames</span>(brca_data_fnl) <span class="sc">%in%</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>                                                  <span class="fu">c</span>(<span class="st">"barcode"</span>, <span class="st">"vital_status"</span>, <span class="st">"tte"</span>)],</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>                  <span class="at">x_cuts =</span> brca_converted_obj<span class="sc">$</span>x_cuts)</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>kirc_cuts_comp <span class="ot">&lt;-</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">opt_cuts_finder</span>(<span class="at">x =</span> kirc_converted_obj<span class="sc">$</span>x,</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>                  <span class="at">y =</span> survival<span class="sc">::</span><span class="fu">Surv</span>(kirc_data_fnl<span class="sc">$</span>tte, kirc_data_fnl<span class="sc">$</span>vital_status),</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>                  <span class="at">method =</span> <span class="st">"both"</span>,</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>                  <span class="at">family =</span> <span class="st">"cox"</span>,</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>                  <span class="at">lasso_rule =</span> <span class="st">"min"</span>,</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>                  <span class="at">lasso_nfolds =</span> <span class="dv">10</span>,</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>                  <span class="at">cols =</span> <span class="fu">colnames</span>(kirc_data_fnl)[<span class="sc">!</span> <span class="fu">colnames</span>(kirc_data_fnl) <span class="sc">%in%</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>                                                  <span class="fu">c</span>(<span class="st">"barcode"</span>, <span class="st">"vital_status"</span>, <span class="st">"tte"</span>)],</span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>                  <span class="at">x_cuts =</span> kirc_converted_obj<span class="sc">$</span>x_cuts)</span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>Bussy_cuts<span class="sc">$</span>opt_cuts <span class="ot">&lt;-</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>  gbm_cuts_comp<span class="sc">$</span>opt_cuts[gbm_cuts_comp<span class="sc">$</span>method <span class="sc">==</span> <span class="st">"biniLasso"</span>]</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>Bussy_cuts<span class="sc">$</span>opt_cuts[<span class="dv">2</span>] <span class="ot">&lt;-</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>  brca_cuts_comp<span class="sc">$</span>opt_cuts[brca_cuts_comp<span class="sc">$</span>method <span class="sc">==</span> <span class="st">"biniLasso"</span>]</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>Bussy_cuts<span class="sc">$</span>opt_cuts[<span class="dv">3</span>] <span class="ot">&lt;-</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>  kirc_cuts_comp<span class="sc">$</span>opt_cuts[kirc_cuts_comp<span class="sc">$</span>method <span class="sc">==</span> <span class="st">"biniLasso"</span>]</span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>gbm_cuts_comp <span class="sc">%&gt;%</span></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(method, opt_cuts) <span class="sc">%&gt;%</span></span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">cuts_est_selected =</span> <span class="fu">list</span>(<span class="fu">unlist</span>(opt_cuts)[<span class="sc">!</span> <span class="fu">is.na</span>(<span class="fu">unlist</span>(opt_cuts))])) <span class="sc">%&gt;%</span></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>  ungroup <span class="sc">%&gt;%</span></span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest_longer</span>(cuts_est_selected) <span class="sc">%&gt;%</span></span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">gene =</span> <span class="fu">unlist</span>(<span class="fu">strsplit</span>(cuts_est_selected_id, <span class="st">"_"</span>))[<span class="dv">1</span>]) <span class="sc">%&gt;%</span></span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(method, gene) <span class="sc">%&gt;%</span></span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>  <span class="fu">reframe</span>(<span class="at">cuts =</span> <span class="fu">paste0</span>(<span class="fu">sort</span>(<span class="fu">round</span>(cuts_est_selected, <span class="dv">3</span>)), <span class="at">collapse =</span> <span class="st">" , "</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">id_cols =</span> gene,</span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a>              <span class="at">names_from =</span> method,</span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>              <span class="at">values_from =</span> cuts) <span class="sc">%&gt;%</span></span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">n_bini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(biniLasso)) <span class="sc">*</span> <span class="fu">str_count</span>(biniLasso, <span class="st">","</span>),</span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a>         <span class="at">n_Sbini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(miniLasso)) <span class="sc">*</span> <span class="fu">str_count</span>(miniLasso, <span class="st">","</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a>  ungroup <span class="sc">%&gt;%</span></span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(n_bini), <span class="fu">desc</span>(n_Sbini)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(gene, biniLasso, miniLasso) <span class="sc">%&gt;%</span></span>
+<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">Caption =</span> <span class="st">"Optimal cut-points found by different methods for the GBM daatset"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table caption-top table-sm table-striped small" data-quarto-postprocess="true">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">gene</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">biniLasso</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">miniLasso</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">PTPRN2</td>
+<td style="text-align: left;">-0.974 , -0.901 , -0.601 , -0.141 , 0.941</td>
+<td style="text-align: left;">-0.141 , 0.941</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LBH</td>
+<td style="text-align: left;">-0.461 , -0.163 , 1.089</td>
+<td style="text-align: left;">-0.163 , -0.099 , 0.879</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AC008875.3</td>
+<td style="text-align: left;">-0.715 , -0.536 , -0.294</td>
+<td style="text-align: left;">-0.294 , 0.109</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SCARA3</td>
+<td style="text-align: left;">-0.626 , -0.558 , -0.446</td>
+<td style="text-align: left;">0.025</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AL592064.1</td>
+<td style="text-align: left;">1.865 , 2.605</td>
+<td style="text-align: left;">0.691 , 1.3</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CASC20</td>
+<td style="text-align: left;">-0.012 , 0.022</td>
+<td style="text-align: left;">-0.012 , 0.005</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">FUT4</td>
+<td style="text-align: left;">0.781 , 1.049</td>
+<td style="text-align: left;">0.781 , 1.049</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">HPCAL1</td>
+<td style="text-align: left;">0.01 , 0.556</td>
+<td style="text-align: left;">0.01 , 0.556</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AC073332.1</td>
+<td style="text-align: left;">-0.588 , 0.314</td>
+<td style="text-align: left;">0.148</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AC083906.5</td>
+<td style="text-align: left;">1.292 , 3.19</td>
+<td style="text-align: left;">1.292</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AC090114.1</td>
+<td style="text-align: left;">0.041 , 1.397</td>
+<td style="text-align: left;">1.397</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PLK2</td>
+<td style="text-align: left;">0.37 , 0.628</td>
+<td style="text-align: left;">0.628</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SSX7</td>
+<td style="text-align: left;">3.126 , 3.274</td>
+<td style="text-align: left;">3.274</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">BMP2</td>
+<td style="text-align: left;">-0.497 , -0.37</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TSPAN13</td>
+<td style="text-align: left;">0.494</td>
+<td style="text-align: left;">0.184 , 0.494</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CLEC5A</td>
+<td style="text-align: left;">0.49</td>
+<td style="text-align: left;">0.49</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CPPED1</td>
+<td style="text-align: left;">-0.853</td>
+<td style="text-align: left;">-0.107</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CPQ</td>
+<td style="text-align: left;">0.323</td>
+<td style="text-align: left;">0.323</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DUSP6</td>
+<td style="text-align: left;">0.347</td>
+<td style="text-align: left;">0.347</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ID1</td>
+<td style="text-align: left;">3.227</td>
+<td style="text-align: left;">3.227</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">INTS6P1</td>
+<td style="text-align: left;">-0.67</td>
+<td style="text-align: left;">1.224</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LINC00906</td>
+<td style="text-align: left;">1.164</td>
+<td style="text-align: left;">1.164</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">P2RY6</td>
+<td style="text-align: left;">0.454</td>
+<td style="text-align: left;">0.454</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PARP4P3</td>
+<td style="text-align: left;">0.467</td>
+<td style="text-align: left;">0.568</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">PODNL1</td>
+<td style="text-align: left;">0.219</td>
+<td style="text-align: left;">0.219</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">RNF175</td>
+<td style="text-align: left;">0.591</td>
+<td style="text-align: left;">0.591</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SLC20A1</td>
+<td style="text-align: left;">1.419</td>
+<td style="text-align: left;">1.419</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SLC43A3</td>
+<td style="text-align: left;">1.035</td>
+<td style="text-align: left;">1.035</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TNFSF14</td>
+<td style="text-align: left;">2.082</td>
+<td style="text-align: left;">2.082</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ZMIZ1</td>
+<td style="text-align: left;">1.384</td>
+<td style="text-align: left;">1.384</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CYB561</td>
+<td style="text-align: left;">-1.062</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">KCNMB3P1</td>
+<td style="text-align: left;">-0.259</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">KCNN4</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">L2HGDH</td>
+<td style="text-align: left;">-0.275</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LINC01674</td>
+<td style="text-align: left;">2.851</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">NCSTNP1</td>
+<td style="text-align: left;">3.434</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TBX2</td>
+<td style="text-align: left;">2.11</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">TP73</td>
+<td style="text-align: left;">-0.954</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">VDR</td>
+<td style="text-align: left;">1.237</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">GARS1P1</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">2.904 , 3.446</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ABI1</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">1.693</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MTHFD2</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">0.03</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TPTEP1</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">0.171</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>brca_cuts_comp <span class="sc">%&gt;%</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(method, opt_cuts) <span class="sc">%&gt;%</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">cuts_est_selected =</span> <span class="fu">list</span>(<span class="fu">unlist</span>(opt_cuts)[<span class="sc">!</span> <span class="fu">is.na</span>(<span class="fu">unlist</span>(opt_cuts))])) <span class="sc">%&gt;%</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  ungroup <span class="sc">%&gt;%</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest_longer</span>(cuts_est_selected) <span class="sc">%&gt;%</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">gene =</span> <span class="fu">unlist</span>(<span class="fu">strsplit</span>(cuts_est_selected_id, <span class="st">"_"</span>))[<span class="dv">1</span>]) <span class="sc">%&gt;%</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(method, gene) <span class="sc">%&gt;%</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">reframe</span>(<span class="at">cuts =</span> <span class="fu">paste0</span>(<span class="fu">sort</span>(<span class="fu">round</span>(cuts_est_selected, <span class="dv">3</span>)), <span class="at">collapse =</span> <span class="st">" , "</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">id_cols =</span> gene,</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>              <span class="at">names_from =</span> method,</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>              <span class="at">values_from =</span> cuts) <span class="sc">%&gt;%</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">n_bini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(biniLasso)) <span class="sc">*</span> <span class="fu">str_count</span>(biniLasso, <span class="st">","</span>),</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>         <span class="at">n_Sbini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(miniLasso)) <span class="sc">*</span> <span class="fu">str_count</span>(miniLasso, <span class="st">","</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  ungroup <span class="sc">%&gt;%</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(n_bini), <span class="fu">desc</span>(n_Sbini)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(gene, biniLasso, miniLasso) <span class="sc">%&gt;%</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">Caption =</span> <span class="st">"Optimal cut-points found by different methods for the BRCA daatset"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table caption-top table-sm table-striped small" data-quarto-postprocess="true">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">gene</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">biniLasso</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">miniLasso</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">MAPT</td>
+<td style="text-align: left;">-0.482 , -0.381 , -0.268</td>
+<td style="text-align: left;">-0.268 , 1.429</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LIMCH1</td>
+<td style="text-align: left;">0.085 , 1.229</td>
+<td style="text-align: left;">0.085 , 0.422 , 1.229</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AL355864.1</td>
+<td style="text-align: left;">-0.373 , 0.35</td>
+<td style="text-align: left;">0.35</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">HNRNPC</td>
+<td style="text-align: left;">-0.677 , 0.021</td>
+<td style="text-align: left;">0.021</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">PSME1</td>
+<td style="text-align: left;">-0.697 , -0.3</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ABCB5</td>
+<td style="text-align: left;">2.334</td>
+<td style="text-align: left;">1.115 , 3.286</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AL033397.1</td>
+<td style="text-align: left;">-0.045</td>
+<td style="text-align: left;">-0.045</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ANO6</td>
+<td style="text-align: left;">-0.126</td>
+<td style="text-align: left;">-0.126</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CCNI2</td>
+<td style="text-align: left;">1.139</td>
+<td style="text-align: left;">1.139</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CYRIA</td>
+<td style="text-align: left;">2.298</td>
+<td style="text-align: left;">2.654</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">FGF7</td>
+<td style="text-align: left;">1.577</td>
+<td style="text-align: left;">1.577</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LINC02159</td>
+<td style="text-align: left;">1.055</td>
+<td style="text-align: left;">1.055</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">NFKB2</td>
+<td style="text-align: left;">1.984</td>
+<td style="text-align: left;">1.984</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PICALM</td>
+<td style="text-align: left;">0.706</td>
+<td style="text-align: left;">0.706</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">PSME2</td>
+<td style="text-align: left;">0.127</td>
+<td style="text-align: left;">0.127</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PSME2P1</td>
+<td style="text-align: left;">-0.235</td>
+<td style="text-align: left;">-0.11</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SPPL2C</td>
+<td style="text-align: left;">0.371</td>
+<td style="text-align: left;">0.371</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">STXBP1</td>
+<td style="text-align: left;">1.221</td>
+<td style="text-align: left;">1.221</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TAPBP</td>
+<td style="text-align: left;">0.002</td>
+<td style="text-align: left;">0.002</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">TMEM163</td>
+<td style="text-align: left;">0.455</td>
+<td style="text-align: left;">0.455</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TMEM164</td>
+<td style="text-align: left;">0.596</td>
+<td style="text-align: left;">0.596</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AL096701.1</td>
+<td style="text-align: left;">-0.396</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CLTA</td>
+<td style="text-align: left;">-0.586</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">FBXO6</td>
+<td style="text-align: left;">-1.236</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MAGEB4</td>
+<td style="text-align: left;">0.466</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">NFKBIE</td>
+<td style="text-align: left;">-0.415</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">POLR2G</td>
+<td style="text-align: left;">-0.565</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PPIB</td>
+<td style="text-align: left;">-0.89</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SLIT3</td>
+<td style="text-align: left;">-0.748</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ABCA1</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">2.103</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">EXOC1</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">0.694</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">GEMIN6</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">1.601</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">NT5E</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">0.716</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">RPLP1</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">2.18</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">STX7</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">0.321</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>kirc_cuts_comp <span class="sc">%&gt;%</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(method, opt_cuts) <span class="sc">%&gt;%</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>(Bussy_cuts <span class="sc">%&gt;%</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>                <span class="fu">mutate</span>(<span class="at">method =</span> <span class="st">"Binacox"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>                <span class="fu">filter</span>(data <span class="sc">==</span> <span class="st">"KIRC"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>                <span class="fu">select</span>(method, <span class="at">opt_cuts =</span> opt_cuts_bina)) <span class="sc">%&gt;%</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">cuts_est_selected =</span> <span class="fu">list</span>(<span class="fu">unlist</span>(opt_cuts)[<span class="sc">!</span> <span class="fu">is.na</span>(<span class="fu">unlist</span>(opt_cuts))])) <span class="sc">%&gt;%</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  ungroup <span class="sc">%&gt;%</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest_longer</span>(cuts_est_selected) <span class="sc">%&gt;%</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">gene =</span> <span class="fu">unlist</span>(<span class="fu">strsplit</span>(cuts_est_selected_id, <span class="st">"_"</span>))[<span class="dv">1</span>]) <span class="sc">%&gt;%</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(method, gene) <span class="sc">%&gt;%</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">reframe</span>(<span class="at">cuts =</span> <span class="fu">paste0</span>(<span class="fu">sort</span>(<span class="fu">round</span>(cuts_est_selected, <span class="dv">3</span>)), <span class="at">collapse =</span> <span class="st">" , "</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">id_cols =</span> gene,</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>              <span class="at">names_from =</span> method,</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>              <span class="at">values_from =</span> cuts) <span class="sc">%&gt;%</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">n_bini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(biniLasso)) <span class="sc">*</span> <span class="fu">str_count</span>(biniLasso, <span class="st">","</span>),</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>         <span class="at">n_Sbini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(miniLasso)) <span class="sc">*</span> <span class="fu">str_count</span>(miniLasso, <span class="st">","</span>),</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>         <span class="at">n_bina =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(<span class="st">`</span><span class="at">Binacox</span><span class="st">`</span>)) <span class="sc">*</span> <span class="fu">str_count</span>(<span class="st">`</span><span class="at">Binacox</span><span class="st">`</span>, <span class="st">","</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>  ungroup <span class="sc">%&gt;%</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(n_bini), <span class="fu">desc</span>(n_Sbini), <span class="fu">desc</span>(n_bina)) <span class="sc">%&gt;%</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(gene, biniLasso, miniLasso, Binacox) <span class="sc">%&gt;%</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">Caption =</span> <span class="st">"Optimal cut-points found by different methods for the KIRC daatset"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table caption-top table-sm table-striped small" data-quarto-postprocess="true">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">gene</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">biniLasso</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">miniLasso</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">Binacox</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">DLGAP1</td>
+<td style="text-align: left;">-0.162 , 0.229 , 0.55</td>
+<td style="text-align: left;">0.451</td>
+<td style="text-align: left;">-0.165</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">IL4</td>
+<td style="text-align: left;">-0.149 , 0.332 , 1.392</td>
+<td style="text-align: left;">1.392</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ANAPC7</td>
+<td style="text-align: left;">0.423 , 0.594</td>
+<td style="text-align: left;">0.423</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MBOAT7</td>
+<td style="text-align: left;">-0.112 , 0.871</td>
+<td style="text-align: left;">0.508</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SGCB</td>
+<td style="text-align: left;">0.199</td>
+<td style="text-align: left;">0.199</td>
+<td style="text-align: left;">-0.33 , 0.2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CARS1</td>
+<td style="text-align: left;">0.25</td>
+<td style="text-align: left;">0.25</td>
+<td style="text-align: left;">0.258</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CUBN</td>
+<td style="text-align: left;">0.655</td>
+<td style="text-align: left;">0.655</td>
+<td style="text-align: left;">-0.201</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">EIF4EBP2</td>
+<td style="text-align: left;">0.407</td>
+<td style="text-align: left;">0.338</td>
+<td style="text-align: left;">0.408</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SLC2A9</td>
+<td style="text-align: left;">-0.066</td>
+<td style="text-align: left;">-0.066</td>
+<td style="text-align: left;">-0.137</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CKAP4</td>
+<td style="text-align: left;">0.927</td>
+<td style="text-align: left;">1.294</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">HJURP</td>
+<td style="text-align: left;">0.186</td>
+<td style="text-align: left;">0.186</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">IMPDH1</td>
+<td style="text-align: left;">1.961</td>
+<td style="text-align: left;">1.961</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TXLNA</td>
+<td style="text-align: left;">-0.045</td>
+<td style="text-align: left;">-0.045</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">DONSON</td>
+<td style="text-align: left;">0.104</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">0.071</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SORBS2</td>
+<td style="text-align: left;">-0.656</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">-0.654</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AR</td>
+<td style="text-align: left;">0.775</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CYP3A7</td>
+<td style="text-align: left;">-0.555</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">DVL3</td>
+<td style="text-align: left;">0.339</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">HES7</td>
+<td style="text-align: left;">1.38</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LIN54</td>
+<td style="text-align: left;">-0.284</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MGAT2P1</td>
+<td style="text-align: left;">4.22</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PTPRB</td>
+<td style="text-align: left;">-0.76</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SNORD100</td>
+<td style="text-align: left;">-0.11</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">USB1</td>
+<td style="text-align: left;">0.126</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ADH5</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">-0.271</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">GIPC2</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">-0.11</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MGAM</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">-0.266</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MSH3</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">-0.386</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MXD3</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">0.001</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">NCKAP5L</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">-0.032</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SELENOP</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">-0.42</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SLC16A12</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">-0.735</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SLC27A2</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">-0.179</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<section id="compare-models-performance" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="compare-models-performance"><span class="header-section-number">4.1</span> Compare models’ performance</h3>
+<p>Once the optimal cut-points are obtained, this section evaluates how well the resulting models perform. The function <code>biniFit()</code> is used to fit Cox proportional hazards models based on the detected cut-points. The fitted models from biniLasso, miniLasso, and Binacox are compared using three performance measures: the Akaike Information Criterion (AIC), the Integrated Brier Score (IBS), and the Concordance Index (C-index). The AIC reflects the trade-off between model fit and complexity, the IBS measures prediction accuracy over time, and the C-index evaluates the model’s ability to rank survival times correctly. The results show that biniLasso and miniLasso consistently outperform Binacox, providing lower AIC and IBS values and higher C-index scores. These findings confirm the improved predictive and computational performance of the proposed methods.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>gbm_cuts_comp <span class="sc">%&gt;%</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(method, opt_cuts) <span class="sc">%&gt;%</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>(Bussy_cuts <span class="sc">%&gt;%</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>                <span class="fu">mutate</span>(<span class="at">method =</span> <span class="st">"Binacox"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>                <span class="fu">filter</span>(data <span class="sc">==</span> <span class="st">"GBM"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>                <span class="fu">select</span>(method, opt_cuts, opt_cuts_bina)) <span class="sc">%&gt;%</span>  </span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(method) <span class="sc">%&gt;%</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest_longer</span>(opt_cuts) <span class="sc">%&gt;%</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="st">`</span><span class="at">n-cuts</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">if_else</span>(method <span class="sc">==</span> <span class="st">"Binacox"</span>,</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">sum</span>(<span class="sc">!</span> <span class="fu">is.na</span>(<span class="fu">unlist</span>(opt_cuts_bina))),</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">sum</span>(<span class="sc">!</span> <span class="fu">is.na</span>(<span class="fu">unlist</span>(opt_cuts))))) <span class="sc">%&gt;%</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(method, <span class="st">`</span><span class="at">n-cuts</span><span class="st">`</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">do</span>(<span class="at">gbm_biniFit =</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>       <span class="fu">list</span>(<span class="fu">biniFit</span>(<span class="at">data =</span> gbm_data_fnl,</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>               <span class="at">optCuts =</span> .,</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>               <span class="at">y =</span> <span class="fu">Surv</span>(gbm_data_fnl<span class="sc">$</span>tte, gbm_data_fnl<span class="sc">$</span>vital_status),</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>               <span class="at">family =</span> <span class="st">"cox"</span>,</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_cuts =</span> <span class="st">"opt_cuts"</span>,</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_x =</span> <span class="st">"opt_cuts_id"</span>)<span class="sc">$</span>fit),</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>     <span class="at">gbm_biniFit_bina =</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>       <span class="fu">list</span>(<span class="fu">biniFit</span>(<span class="at">data =</span> gbm_data_fnl,</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>               <span class="at">optCuts =</span> .,</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>               <span class="at">y =</span> <span class="fu">Surv</span>(gbm_data_fnl<span class="sc">$</span>tte, gbm_data_fnl<span class="sc">$</span>vital_status),</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>               <span class="at">family =</span> <span class="st">"cox"</span>,</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_cuts =</span> <span class="st">"opt_cuts_bina"</span>,</span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_x =</span> <span class="st">"opt_cuts_id"</span>)<span class="sc">$</span>fit),</span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>     <span class="at">gbm_bini_dataFit =</span></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>       <span class="fu">list</span>(<span class="fu">biniFit</span>(<span class="at">data =</span> gbm_data_fnl,</span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>               <span class="at">optCuts =</span> .,</span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>               <span class="at">y =</span> <span class="fu">Surv</span>(gbm_data_fnl<span class="sc">$</span>tte, gbm_data_fnl<span class="sc">$</span>vital_status),</span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>               <span class="at">family =</span> <span class="st">"cox"</span>,</span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_cuts =</span> <span class="st">"opt_cuts"</span>,</span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_x =</span> <span class="st">"opt_cuts_id"</span>)<span class="sc">$</span>dataFit)) <span class="sc">%&gt;%</span></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">AIC =</span> <span class="fu">if_else</span>(method <span class="sc">==</span> <span class="st">"Binacox"</span>,</span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>                       <span class="fu">round</span>(<span class="fu">AIC</span>(gbm_biniFit_bina[[<span class="dv">1</span>]]), <span class="dv">0</span>),</span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>                       <span class="fu">round</span>(<span class="fu">AIC</span>(gbm_biniFit[[<span class="dv">1</span>]]), <span class="dv">0</span>)),</span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>         <span class="at">IBS =</span> <span class="fu">ibs</span>(<span class="fu">pec</span>(<span class="fu">list</span>(<span class="at">Cox =</span> gbm_biniFit[[<span class="dv">1</span>]]),</span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>                       <span class="fu">Hist</span>(time, event) <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>                       <span class="at">data =</span> gbm_bini_dataFit[[<span class="dv">1</span>]],</span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>                       <span class="at">verbose =</span> F))[<span class="fu">if_else</span>(method <span class="sc">==</span> <span class="st">"Binacox"</span>, <span class="dv">1</span>, <span class="dv">2</span>), <span class="dv">1</span>],</span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a>         <span class="st">`</span><span class="at">C-index</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">if_else</span>(method <span class="sc">==</span> <span class="st">"Binacox"</span>,</span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a>                             <span class="fu">paste0</span>(<span class="fu">round</span>(<span class="fu">concordance</span>(gbm_biniFit_bina[[<span class="dv">1</span>]])<span class="sc">$</span>concordance, <span class="dv">3</span>),</span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a>                            <span class="st">" ("</span>, <span class="fu">round</span>(<span class="fu">sqrt</span>(<span class="fu">concordance</span>(gbm_biniFit_bina[[<span class="dv">1</span>]])<span class="sc">$</span>var), <span class="dv">3</span>),</span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>                            <span class="st">")"</span>),</span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">paste0</span>(<span class="fu">round</span>(<span class="fu">concordance</span>(gbm_biniFit[[<span class="dv">1</span>]])<span class="sc">$</span>concordance, <span class="dv">3</span>),</span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a>                            <span class="st">" ("</span>, <span class="fu">round</span>(<span class="fu">sqrt</span>(<span class="fu">concordance</span>(gbm_biniFit[[<span class="dv">1</span>]])<span class="sc">$</span>var), <span class="dv">3</span>),</span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a>                            <span class="st">")"</span>))) <span class="sc">%&gt;%</span></span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a>  ungroup <span class="sc">%&gt;%</span></span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Dataset =</span> <span class="st">"GBM"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">relocate</span>(Dataset, <span class="at">.before =</span> <span class="st">"method"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">!</span> <span class="fu">c</span>(gbm_biniFit, gbm_biniFit_bina, gbm_bini_dataFit)) <span class="sc">%&gt;%</span></span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>,</span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a>        <span class="at">Caption =</span> <span class="st">"Compare AIC of fitted Cox models by using detected optimal cut-points - GBM dataset"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table caption-top table-sm table-striped small" data-quarto-postprocess="true">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">Dataset</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">method</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">n-cuts</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">AIC</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">IBS</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">C-index</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">GBM</td>
+<td style="text-align: left;">Binacox</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">3027</td>
+<td style="text-align: right;">0.064</td>
+<td style="text-align: left;">0.5 (0)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">GBM</td>
+<td style="text-align: left;">biniLasso</td>
+<td style="text-align: right;">59</td>
+<td style="text-align: right;">2739</td>
+<td style="text-align: right;">0.030</td>
+<td style="text-align: left;">0.8 (0.013)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">GBM</td>
+<td style="text-align: left;">miniLasso</td>
+<td style="text-align: right;">43</td>
+<td style="text-align: right;">2803</td>
+<td style="text-align: right;">0.037</td>
+<td style="text-align: left;">0.779 (0.015)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>brca_cuts_comp <span class="sc">%&gt;%</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(method, opt_cuts) <span class="sc">%&gt;%</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>(Bussy_cuts <span class="sc">%&gt;%</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>                <span class="fu">mutate</span>(<span class="at">method =</span> <span class="st">"Binacox"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>                <span class="fu">filter</span>(data <span class="sc">==</span> <span class="st">"BRCA"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>                <span class="fu">select</span>(method, opt_cuts, opt_cuts_bina)) <span class="sc">%&gt;%</span>  </span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(method) <span class="sc">%&gt;%</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest_longer</span>(opt_cuts) <span class="sc">%&gt;%</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="st">`</span><span class="at">n-cuts</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">if_else</span>(method <span class="sc">==</span> <span class="st">"Binacox"</span>,</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">sum</span>(<span class="sc">!</span> <span class="fu">is.na</span>(<span class="fu">unlist</span>(opt_cuts_bina))),</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">sum</span>(<span class="sc">!</span> <span class="fu">is.na</span>(<span class="fu">unlist</span>(opt_cuts))))) <span class="sc">%&gt;%</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(method, <span class="st">`</span><span class="at">n-cuts</span><span class="st">`</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">do</span>(<span class="at">brca_biniFit =</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>       <span class="fu">list</span>(<span class="fu">biniFit</span>(<span class="at">data =</span> brca_data_fnl,</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>               <span class="at">optCuts =</span> .,</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>               <span class="at">y =</span> <span class="fu">Surv</span>(brca_data_fnl<span class="sc">$</span>tte, brca_data_fnl<span class="sc">$</span>vital_status),</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>               <span class="at">family =</span> <span class="st">"cox"</span>,</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_cuts =</span> <span class="st">"opt_cuts"</span>,</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_x =</span> <span class="st">"opt_cuts_id"</span>)<span class="sc">$</span>fit),</span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>     <span class="at">brca_biniFit_bina =</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>       <span class="fu">list</span>(<span class="fu">biniFit</span>(<span class="at">data =</span> brca_data_fnl,</span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>               <span class="at">optCuts =</span> .,</span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>               <span class="at">y =</span> <span class="fu">Surv</span>(brca_data_fnl<span class="sc">$</span>tte, brca_data_fnl<span class="sc">$</span>vital_status),</span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>               <span class="at">family =</span> <span class="st">"cox"</span>,</span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_cuts =</span> <span class="st">"opt_cuts_bina"</span>,</span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_x =</span> <span class="st">"opt_cuts_id"</span>)<span class="sc">$</span>fit),</span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>     <span class="at">brca_bini_dataFit =</span></span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>       <span class="fu">list</span>(<span class="fu">biniFit</span>(<span class="at">data =</span> brca_data_fnl,</span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>               <span class="at">optCuts =</span> .,</span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a>               <span class="at">y =</span> <span class="fu">Surv</span>(brca_data_fnl<span class="sc">$</span>tte, brca_data_fnl<span class="sc">$</span>vital_status),</span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a>               <span class="at">family =</span> <span class="st">"cox"</span>,</span>
+<span id="cb11-32"><a href="#cb11-32" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_cuts =</span> <span class="st">"opt_cuts"</span>,</span>
+<span id="cb11-33"><a href="#cb11-33" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_x =</span> <span class="st">"opt_cuts_id"</span>)<span class="sc">$</span>dataFit)) <span class="sc">%&gt;%</span></span>
+<span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
+<span id="cb11-35"><a href="#cb11-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">AIC =</span> <span class="fu">if_else</span>(method <span class="sc">==</span> <span class="st">"Binacox"</span>,</span>
+<span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a>                       <span class="fu">round</span>(<span class="fu">AIC</span>(brca_biniFit_bina[[<span class="dv">1</span>]]), <span class="dv">0</span>),</span>
+<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a>                       <span class="fu">round</span>(<span class="fu">AIC</span>(brca_biniFit[[<span class="dv">1</span>]]), <span class="dv">0</span>)),</span>
+<span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a>         <span class="at">IBS =</span> <span class="fu">ibs</span>(<span class="fu">pec</span>(<span class="fu">list</span>(<span class="at">Cox =</span> brca_biniFit[[<span class="dv">1</span>]]),</span>
+<span id="cb11-39"><a href="#cb11-39" aria-hidden="true" tabindex="-1"></a>                       <span class="fu">Hist</span>(time, event) <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb11-40"><a href="#cb11-40" aria-hidden="true" tabindex="-1"></a>                       <span class="at">data =</span> brca_bini_dataFit[[<span class="dv">1</span>]],</span>
+<span id="cb11-41"><a href="#cb11-41" aria-hidden="true" tabindex="-1"></a>                       <span class="at">verbose =</span> F))[<span class="fu">if_else</span>(method <span class="sc">==</span> <span class="st">"Binacox"</span>, <span class="dv">1</span>, <span class="dv">2</span>), <span class="dv">1</span>],</span>
+<span id="cb11-42"><a href="#cb11-42" aria-hidden="true" tabindex="-1"></a>         <span class="st">`</span><span class="at">C-index</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">if_else</span>(method <span class="sc">==</span> <span class="st">"Binacox"</span>,</span>
+<span id="cb11-43"><a href="#cb11-43" aria-hidden="true" tabindex="-1"></a>                             <span class="fu">paste0</span>(<span class="fu">round</span>(<span class="fu">concordance</span>(brca_biniFit_bina[[<span class="dv">1</span>]])<span class="sc">$</span>concordance, <span class="dv">3</span>),</span>
+<span id="cb11-44"><a href="#cb11-44" aria-hidden="true" tabindex="-1"></a>                            <span class="st">" ("</span>, <span class="fu">round</span>(<span class="fu">sqrt</span>(<span class="fu">concordance</span>(brca_biniFit_bina[[<span class="dv">1</span>]])<span class="sc">$</span>var), <span class="dv">3</span>),</span>
+<span id="cb11-45"><a href="#cb11-45" aria-hidden="true" tabindex="-1"></a>                            <span class="st">")"</span>),</span>
+<span id="cb11-46"><a href="#cb11-46" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">paste0</span>(<span class="fu">round</span>(<span class="fu">concordance</span>(brca_biniFit[[<span class="dv">1</span>]])<span class="sc">$</span>concordance, <span class="dv">3</span>),</span>
+<span id="cb11-47"><a href="#cb11-47" aria-hidden="true" tabindex="-1"></a>                            <span class="st">" ("</span>, <span class="fu">round</span>(<span class="fu">sqrt</span>(<span class="fu">concordance</span>(brca_biniFit[[<span class="dv">1</span>]])<span class="sc">$</span>var), <span class="dv">3</span>),</span>
+<span id="cb11-48"><a href="#cb11-48" aria-hidden="true" tabindex="-1"></a>                            <span class="st">")"</span>))) <span class="sc">%&gt;%</span></span>
+<span id="cb11-49"><a href="#cb11-49" aria-hidden="true" tabindex="-1"></a>  ungroup <span class="sc">%&gt;%</span></span>
+<span id="cb11-50"><a href="#cb11-50" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Dataset =</span> <span class="st">"BRCA"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-51"><a href="#cb11-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">relocate</span>(Dataset, <span class="at">.before =</span> <span class="st">"method"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-52"><a href="#cb11-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">!</span> <span class="fu">c</span>(brca_biniFit, brca_biniFit_bina, brca_bini_dataFit)) <span class="sc">%&gt;%</span></span>
+<span id="cb11-53"><a href="#cb11-53" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>,</span>
+<span id="cb11-54"><a href="#cb11-54" aria-hidden="true" tabindex="-1"></a>        <span class="at">Caption =</span> <span class="st">"Compare AIC of fitted Cox models by using detected optimal cut-points - BRCA dataset"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-55"><a href="#cb11-55" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table caption-top table-sm table-striped small" data-quarto-postprocess="true">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">Dataset</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">method</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">n-cuts</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">AIC</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">IBS</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">C-index</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">BRCA</td>
+<td style="text-align: left;">Binacox</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2109</td>
+<td style="text-align: right;">0.163</td>
+<td style="text-align: left;">0.5 (0)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">BRCA</td>
+<td style="text-align: left;">biniLasso</td>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">1974</td>
+<td style="text-align: right;">0.089</td>
+<td style="text-align: left;">0.772 (0.018)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">BRCA</td>
+<td style="text-align: left;">miniLasso</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">1966</td>
+<td style="text-align: right;">0.096</td>
+<td style="text-align: left;">0.761 (0.017)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>kirc_cuts_comp <span class="sc">%&gt;%</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(method, opt_cuts) <span class="sc">%&gt;%</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>(Bussy_cuts <span class="sc">%&gt;%</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>                <span class="fu">mutate</span>(<span class="at">method =</span> <span class="st">"Binacox"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>                <span class="fu">filter</span>(data <span class="sc">==</span> <span class="st">"KIRC"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>                <span class="fu">select</span>(method, <span class="at">opt_cuts =</span> opt_cuts_bina)) <span class="sc">%&gt;%</span>  </span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(method) <span class="sc">%&gt;%</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest_longer</span>(opt_cuts) <span class="sc">%&gt;%</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="st">`</span><span class="at">n-cuts</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sum</span>(<span class="sc">!</span> <span class="fu">is.na</span>(<span class="fu">unlist</span>(opt_cuts)))) <span class="sc">%&gt;%</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(method, <span class="st">`</span><span class="at">n-cuts</span><span class="st">`</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">do</span>(<span class="at">kirc_biniFit =</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>       <span class="fu">list</span>(<span class="fu">biniFit</span>(<span class="at">data =</span> kirc_data_fnl,</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>               <span class="at">optCuts =</span> .,</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>               <span class="at">y =</span> <span class="fu">Surv</span>(kirc_data_fnl<span class="sc">$</span>tte, kirc_data_fnl<span class="sc">$</span>vital_status),</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>               <span class="at">family =</span> <span class="st">"cox"</span>,</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_cuts =</span> <span class="st">"opt_cuts"</span>,</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_x =</span> <span class="st">"opt_cuts_id"</span>)<span class="sc">$</span>fit),</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>     <span class="at">kirc_bini_dataFit =</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>       <span class="fu">list</span>(<span class="fu">biniFit</span>(<span class="at">data =</span> kirc_data_fnl,</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>               <span class="at">optCuts =</span> .,</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>               <span class="at">y =</span> <span class="fu">Surv</span>(kirc_data_fnl<span class="sc">$</span>tte, kirc_data_fnl<span class="sc">$</span>vital_status),</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>               <span class="at">family =</span> <span class="st">"cox"</span>,</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_cuts =</span> <span class="st">"opt_cuts"</span>,</span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_x =</span> <span class="st">"opt_cuts_id"</span>)<span class="sc">$</span>dataFit)) <span class="sc">%&gt;%</span></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">AIC =</span> <span class="fu">round</span>(<span class="fu">AIC</span>(kirc_biniFit[[<span class="dv">1</span>]]), <span class="dv">0</span>),</span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>         <span class="at">IBS =</span> <span class="fu">ibs</span>(<span class="fu">pec</span>(<span class="fu">list</span>(<span class="at">Cox =</span> kirc_biniFit[[<span class="dv">1</span>]]),</span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>                       <span class="fu">Hist</span>(time, event) <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>                       <span class="at">data =</span> kirc_bini_dataFit[[<span class="dv">1</span>]],</span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>                       <span class="at">verbose =</span> F))[<span class="dv">2</span>, <span class="dv">1</span>],</span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>         <span class="st">`</span><span class="at">C-index</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">paste0</span>(<span class="fu">round</span>(<span class="fu">concordance</span>(kirc_biniFit[[<span class="dv">1</span>]])<span class="sc">$</span>concordance, <span class="dv">3</span>),</span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>                            <span class="st">" ("</span>, <span class="fu">round</span>(<span class="fu">sqrt</span>(<span class="fu">concordance</span>(kirc_biniFit[[<span class="dv">1</span>]])<span class="sc">$</span>var), <span class="dv">3</span>),</span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>                            <span class="st">")"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>  ungroup <span class="sc">%&gt;%</span></span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Dataset =</span> <span class="st">"KIRC"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">relocate</span>(Dataset, <span class="at">.before =</span> <span class="st">"method"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">!</span> <span class="fu">c</span>(kirc_biniFit, kirc_bini_dataFit)) <span class="sc">%&gt;%</span></span>
+<span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>,</span>
+<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a>        <span class="at">Caption =</span> <span class="st">"Compare AIC of fitted Cox models by using detected optimal cut-points - KIRC dataset"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table caption-top table-sm table-striped small" data-quarto-postprocess="true">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">Dataset</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">method</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">n-cuts</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">AIC</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">IBS</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">C-index</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">KIRC</td>
+<td style="text-align: left;">Binacox</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">2109</td>
+<td style="text-align: right;">0.154</td>
+<td style="text-align: left;">0.736 (0.018)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">KIRC</td>
+<td style="text-align: left;">biniLasso</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">2073</td>
+<td style="text-align: right;">0.123</td>
+<td style="text-align: left;">0.777 (0.016)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">KIRC</td>
+<td style="text-align: left;">miniLasso</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">2069</td>
+<td style="text-align: right;">0.152</td>
+<td style="text-align: left;">0.764 (0.017)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+</section>
+<section id="fixed-number-of-optimal-cut-points" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="fixed-number-of-optimal-cut-points"><span class="header-section-number">5</span> Fixed number of optimal cut-points</h2>
+<p>In some applications, it is desirable to limit the number of cut-points per variable for easier interpretation. This section explains how to use the <code>opt_fixed_nCuts()</code> function to restrict the model to a fixed number of thresholds—here, at most two per feature. The function identifies the best-performing cut-points within this constraint while maintaining good predictive ability. The results are summarized in tables showing the selected thresholds for each gene in all datasets. As it can be seen, limiting the number of cut-points makes the final model simpler and more interpretable, while still keeping its predictive performance close to the unrestricted version. This approach is particularly useful in clinical studies where fewer, well-defined thresholds are preferred.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>gbm_fixedCuts_comp <span class="ot">&lt;-</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">opt_fixed_nCuts</span>(<span class="at">x =</span> gbm_converted_obj<span class="sc">$</span>x,</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">y =</span> survival<span class="sc">::</span><span class="fu">Surv</span>(gbm_data_fnl<span class="sc">$</span>tte, gbm_data_fnl<span class="sc">$</span>vital_status),</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">max_nCuts =</span> <span class="dv">2</span>,</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">method =</span> <span class="st">"both"</span>,</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>                 <span class="at">family =</span> <span class="st">"cox"</span>,</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>                 <span class="at">lasso_rule =</span> <span class="st">"min"</span>,</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>                 <span class="at">lasso_nfolds =</span> <span class="dv">10</span>,</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>                 <span class="at">cols =</span> <span class="fu">colnames</span>(gbm_data_fnl)[<span class="sc">!</span> <span class="fu">colnames</span>(gbm_data_fnl) <span class="sc">%in%</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>                                            <span class="fu">c</span>(<span class="st">"barcode"</span>, <span class="st">"vital_status"</span>, <span class="st">"tte"</span>)],</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>                 <span class="at">x_cuts =</span> gbm_converted_obj<span class="sc">$</span>x_cuts)</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>brca_fixedCuts_comp <span class="ot">&lt;-</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a> <span class="fu">opt_fixed_nCuts</span>(<span class="at">x =</span> brca_converted_obj<span class="sc">$</span>x,</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>                 <span class="at">y =</span> survival<span class="sc">::</span><span class="fu">Surv</span>(brca_data_fnl<span class="sc">$</span>tte, brca_data_fnl<span class="sc">$</span>vital_status),</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>                 <span class="at">max_nCuts =</span> <span class="dv">2</span>,</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>                 <span class="at">method =</span> <span class="st">"both"</span>,</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>                 <span class="at">family =</span> <span class="st">"cox"</span>,</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>                 <span class="at">lasso_rule =</span> <span class="st">"min"</span>,</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>                 <span class="at">lasso_nfolds =</span> <span class="dv">10</span>,</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>                 <span class="at">cols =</span> <span class="fu">colnames</span>(brca_data_fnl)[<span class="sc">!</span> <span class="fu">colnames</span>(brca_data_fnl) <span class="sc">%in%</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>                                            <span class="fu">c</span>(<span class="st">"barcode"</span>, <span class="st">"vital_status"</span>, <span class="st">"tte"</span>)],</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>                 <span class="at">x_cuts =</span> brca_converted_obj<span class="sc">$</span>x_cuts)</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>kirc_fixedCuts_comp <span class="ot">&lt;-</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a> <span class="fu">opt_fixed_nCuts</span>(<span class="at">x =</span> kirc_converted_obj<span class="sc">$</span>x,</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>                 <span class="at">y =</span> survival<span class="sc">::</span><span class="fu">Surv</span>(kirc_data_fnl<span class="sc">$</span>tte, kirc_data_fnl<span class="sc">$</span>vital_status),</span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>                 <span class="at">max_nCuts =</span> <span class="dv">2</span>,</span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>                 <span class="at">method =</span> <span class="st">"both"</span>,</span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>                 <span class="at">family =</span> <span class="st">"cox"</span>,</span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>                 <span class="at">lasso_rule =</span> <span class="st">"min"</span>,</span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>                 <span class="at">lasso_nfolds =</span> <span class="dv">10</span>,</span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>                 <span class="at">cols =</span> <span class="fu">colnames</span>(kirc_data_fnl)[<span class="sc">!</span> <span class="fu">colnames</span>(kirc_data_fnl) <span class="sc">%in%</span></span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>                                            <span class="fu">c</span>(<span class="st">"barcode"</span>, <span class="st">"vital_status"</span>, <span class="st">"tte"</span>)],</span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>                 <span class="at">x_cuts =</span> kirc_converted_obj<span class="sc">$</span>x_cuts)</span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a>gbm_fixedCuts_comp <span class="sc">%&gt;%</span></span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(method, opt_cuts) <span class="sc">%&gt;%</span></span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
+<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">cuts_est_selected =</span> <span class="fu">list</span>(<span class="fu">unlist</span>(opt_cuts)[<span class="sc">!</span> <span class="fu">is.na</span>(<span class="fu">unlist</span>(opt_cuts))])) <span class="sc">%&gt;%</span></span>
+<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a>  ungroup <span class="sc">%&gt;%</span></span>
+<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest_longer</span>(cuts_est_selected) <span class="sc">%&gt;%</span></span>
+<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
+<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">ind_tmp =</span> <span class="fu">gregexpr</span>(<span class="st">"_ENSG"</span>, cuts_est_selected_id)[[<span class="dv">1</span>]][<span class="dv">1</span>] <span class="sc">-</span> <span class="dv">1</span>,</span>
+<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a>         <span class="at">gene =</span> <span class="fu">substr</span>(cuts_est_selected_id, <span class="dv">1</span>, ind_tmp)) <span class="sc">%&gt;%</span></span>
+<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(method, gene) <span class="sc">%&gt;%</span></span>
+<span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a>  <span class="fu">reframe</span>(<span class="at">cuts =</span> <span class="fu">paste0</span>(<span class="fu">sort</span>(<span class="fu">round</span>(cuts_est_selected, <span class="dv">3</span>)), <span class="at">collapse =</span> <span class="st">" , "</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">id_cols =</span> gene,</span>
+<span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a>              <span class="at">names_from =</span> method,</span>
+<span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a>              <span class="at">values_from =</span> cuts) <span class="sc">%&gt;%</span></span>
+<span id="cb13-50"><a href="#cb13-50" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
+<span id="cb13-51"><a href="#cb13-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">n_bini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(biniLasso)) <span class="sc">*</span> <span class="fu">str_count</span>(biniLasso, <span class="st">","</span>),</span>
+<span id="cb13-52"><a href="#cb13-52" aria-hidden="true" tabindex="-1"></a>         <span class="at">n_Sbini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(miniLasso)) <span class="sc">*</span> <span class="fu">str_count</span>(miniLasso, <span class="st">","</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb13-53"><a href="#cb13-53" aria-hidden="true" tabindex="-1"></a>  ungroup <span class="sc">%&gt;%</span></span>
+<span id="cb13-54"><a href="#cb13-54" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(n_bini), <span class="fu">desc</span>(n_Sbini)) <span class="sc">%&gt;%</span></span>
+<span id="cb13-55"><a href="#cb13-55" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(gene, biniLasso, miniLasso) <span class="sc">%&gt;%</span></span>
+<span id="cb13-56"><a href="#cb13-56" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">Caption =</span> <span class="st">"Optimal cut-points found by different methods for the GBM daatset"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb13-57"><a href="#cb13-57" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table caption-top table-sm table-striped small" data-quarto-postprocess="true">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">gene</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">biniLasso</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">miniLasso</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">AC008875.3</td>
+<td style="text-align: left;">-0.536 , -0.294</td>
+<td style="text-align: left;">-0.294 , 0.167</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">GARS1P1</td>
+<td style="text-align: left;">0.932 , 1.823</td>
+<td style="text-align: left;">2.775 , 3.446</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LBH</td>
+<td style="text-align: left;">-0.163 , 0.879</td>
+<td style="text-align: left;">-0.163 , 0.879</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PTPRN2</td>
+<td style="text-align: left;">-0.601 , -0.141</td>
+<td style="text-align: left;">-0.141 , 0.941</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SSX7</td>
+<td style="text-align: left;">3.126 , 3.566</td>
+<td style="text-align: left;">3.126 , 3.566</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AC073332.1</td>
+<td style="text-align: left;">-0.588 , 0.148</td>
+<td style="text-align: left;">0.148</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AC083906.5</td>
+<td style="text-align: left;">1.232 , 3.19</td>
+<td style="text-align: left;">1.232</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AL592064.1</td>
+<td style="text-align: left;">1.47</td>
+<td style="text-align: left;">0.691 , 1.3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">HPCAL1</td>
+<td style="text-align: left;">0.556</td>
+<td style="text-align: left;">0.01 , 0.556</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SCARA3</td>
+<td style="text-align: left;">-0.426</td>
+<td style="text-align: left;">-0.426 , 0.025</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ABI1</td>
+<td style="text-align: left;">1.693</td>
+<td style="text-align: left;">1.693</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AC090114.1</td>
+<td style="text-align: left;">1.397</td>
+<td style="text-align: left;">1.397</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CLEC5A</td>
+<td style="text-align: left;">0.49</td>
+<td style="text-align: left;">0.49</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CPQ</td>
+<td style="text-align: left;">0.208</td>
+<td style="text-align: left;">0.323</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DUSP6</td>
+<td style="text-align: left;">0.347</td>
+<td style="text-align: left;">0.347</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">FUT4</td>
+<td style="text-align: left;">1.049</td>
+<td style="text-align: left;">1.049</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">HTR7</td>
+<td style="text-align: left;">-0.258</td>
+<td style="text-align: left;">-0.258</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ID1</td>
+<td style="text-align: left;">3.227</td>
+<td style="text-align: left;">3.227</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">INTS6P1</td>
+<td style="text-align: left;">-0.67</td>
+<td style="text-align: left;">1.224</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">KLKP1</td>
+<td style="text-align: left;">-0.302</td>
+<td style="text-align: left;">1.711</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LINC00906</td>
+<td style="text-align: left;">1.164</td>
+<td style="text-align: left;">1.164</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MTHFD2</td>
+<td style="text-align: left;">0.03</td>
+<td style="text-align: left;">0.03</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">P2RY6</td>
+<td style="text-align: left;">0.454</td>
+<td style="text-align: left;">0.454</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PARP4P3</td>
+<td style="text-align: left;">0.568</td>
+<td style="text-align: left;">0.568</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">PLK2</td>
+<td style="text-align: left;">0.37</td>
+<td style="text-align: left;">0.628</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">RNF175</td>
+<td style="text-align: left;">-0.687</td>
+<td style="text-align: left;">0.591</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SLC20A1</td>
+<td style="text-align: left;">1.419</td>
+<td style="text-align: left;">1.419</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">TNFSF14</td>
+<td style="text-align: left;">2.082</td>
+<td style="text-align: left;">2.082</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TSPAN13</td>
+<td style="text-align: left;">0.184</td>
+<td style="text-align: left;">0.184</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ZMIZ1_AS1</td>
+<td style="text-align: left;">1.384</td>
+<td style="text-align: left;">1.384</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AC003688.2</td>
+<td style="text-align: left;">3.96</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ANKH</td>
+<td style="text-align: left;">-0.667</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CFTR</td>
+<td style="text-align: left;">1.638</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CPPED1</td>
+<td style="text-align: left;">-0.853</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CYB561</td>
+<td style="text-align: left;">-1.062</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">KCNN4</td>
+<td style="text-align: left;">0.5</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">L2HGDH</td>
+<td style="text-align: left;">-0.275</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LINC01674</td>
+<td style="text-align: left;">2.851</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">NCSTNP1</td>
+<td style="text-align: left;">4.812</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">OSMR</td>
+<td style="text-align: left;">-0.953</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SNRPB</td>
+<td style="text-align: left;">2.247</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">TBX2_AS1</td>
+<td style="text-align: left;">2.11</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TP73_AS1</td>
+<td style="text-align: left;">-0.954</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SLC43A3</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">1.035</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>It should be noted that some genes show only one threshold or <code>NA</code> instead of two. This happens for two main reasons. In cases where two detected thresholds are very close to each other, the algorithm treats them as overlapping and merges them into a single effective cut-point, since they represent nearly the same boundary in the variable’s range. This is often observed when the predictor has a limited range or when the outcome does not vary much between nearby values. On the other hand, <code>NA</code> values occur when no meaningful threshold is detected for that variable. This typically happens when the variable shows no strong association with the outcome after penalization, or when its effect is roughly linear and cannot be improved by categorization. In both cases, the algorithm avoids introducing unnecessary or redundant thresholds, resulting in a simpler and more interpretable model.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>brca_fixedCuts_comp <span class="sc">%&gt;%</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(method, opt_cuts) <span class="sc">%&gt;%</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">cuts_est_selected =</span> <span class="fu">list</span>(<span class="fu">unlist</span>(opt_cuts)[<span class="sc">!</span> <span class="fu">is.na</span>(<span class="fu">unlist</span>(opt_cuts))])) <span class="sc">%&gt;%</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  ungroup <span class="sc">%&gt;%</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest_longer</span>(cuts_est_selected) <span class="sc">%&gt;%</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">ind_tmp =</span> <span class="fu">gregexpr</span>(<span class="st">"_ENSG"</span>, cuts_est_selected_id)[[<span class="dv">1</span>]][<span class="dv">1</span>] <span class="sc">-</span> <span class="dv">1</span>,</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">gene =</span> <span class="fu">substr</span>(cuts_est_selected_id, <span class="dv">1</span>, ind_tmp)) <span class="sc">%&gt;%</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(method, gene) <span class="sc">%&gt;%</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">reframe</span>(<span class="at">cuts =</span> <span class="fu">paste0</span>(<span class="fu">sort</span>(<span class="fu">round</span>(cuts_est_selected, <span class="dv">3</span>)), <span class="at">collapse =</span> <span class="st">" , "</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">id_cols =</span> gene,</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>              <span class="at">names_from =</span> method,</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>              <span class="at">values_from =</span> cuts) <span class="sc">%&gt;%</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">n_bini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(biniLasso)) <span class="sc">*</span> <span class="fu">str_count</span>(biniLasso, <span class="st">","</span>),</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>         <span class="at">n_Sbini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(miniLasso)) <span class="sc">*</span> <span class="fu">str_count</span>(miniLasso, <span class="st">","</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>  ungroup <span class="sc">%&gt;%</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(n_bini), <span class="fu">desc</span>(n_Sbini)) <span class="sc">%&gt;%</span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(gene, biniLasso, miniLasso) <span class="sc">%&gt;%</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">Caption =</span> <span class="st">"Optimal cut-points found by different methods for the BRCA daatset"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table caption-top table-sm table-striped small" data-quarto-postprocess="true">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">gene</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">biniLasso</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">miniLasso</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">MAPT_AS1</td>
+<td style="text-align: left;">-0.381 , -0.268</td>
+<td style="text-align: left;">-0.268 , 1.429</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AL096701.1</td>
+<td style="text-align: left;">-0.396 , 0.161</td>
+<td style="text-align: left;">0.161</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AL355864.1</td>
+<td style="text-align: left;">-0.301 , 0.35</td>
+<td style="text-align: left;">0.35</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">EXOC1</td>
+<td style="text-align: left;">-0.22 , 0.694</td>
+<td style="text-align: left;">0.694</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LINC00488</td>
+<td style="text-align: left;">0.058 , 0.141</td>
+<td style="text-align: left;">0.058</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">RFTN1P1</td>
+<td style="text-align: left;">2.07 , 2.933</td>
+<td style="text-align: left;">2.07</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AC136601.1</td>
+<td style="text-align: left;">0.908 , 2.152</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ANO6</td>
+<td style="text-align: left;">-0.126 , 1.273</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">POLR2G</td>
+<td style="text-align: left;">-1.148 , -0.565</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AL033397.1</td>
+<td style="text-align: left;">0.006</td>
+<td style="text-align: left;">-0.045 , 0.006</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">PNMA6B</td>
+<td style="text-align: left;">0.453</td>
+<td style="text-align: left;">0.453 , 0.587</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PSME2P1</td>
+<td style="text-align: left;">-0.235</td>
+<td style="text-align: left;">-0.235 , -0.11</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ABCB5</td>
+<td style="text-align: left;">3.286</td>
+<td style="text-align: left;">2.334</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AC091078.1</td>
+<td style="text-align: left;">2.959</td>
+<td style="text-align: left;">2.959</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AL049548.1</td>
+<td style="text-align: left;">1.487</td>
+<td style="text-align: left;">1.351</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">C2orf91</td>
+<td style="text-align: left;">0.142</td>
+<td style="text-align: left;">0.142</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CCNI2</td>
+<td style="text-align: left;">1.139</td>
+<td style="text-align: left;">1.139</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CLTA</td>
+<td style="text-align: left;">-0.562</td>
+<td style="text-align: left;">-0.562</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">FANCF</td>
+<td style="text-align: left;">-0.04</td>
+<td style="text-align: left;">-0.04</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">GEMIN6</td>
+<td style="text-align: left;">1.601</td>
+<td style="text-align: left;">1.601</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LIMCH1</td>
+<td style="text-align: left;">0.422</td>
+<td style="text-align: left;">0.422</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LINC02159</td>
+<td style="text-align: left;">1.055</td>
+<td style="text-align: left;">1.055</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MAGEB4</td>
+<td style="text-align: left;">0.466</td>
+<td style="text-align: left;">0.466</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MAPKAPK3</td>
+<td style="text-align: left;">-0.545</td>
+<td style="text-align: left;">-0.545</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">PARP12</td>
+<td style="text-align: left;">1.046</td>
+<td style="text-align: left;">1.046</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PICALM</td>
+<td style="text-align: left;">0.706</td>
+<td style="text-align: left;">0.706</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SPPL2C</td>
+<td style="text-align: left;">0.371</td>
+<td style="text-align: left;">0.371</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">TAPBP</td>
+<td style="text-align: left;">-0.048</td>
+<td style="text-align: left;">-0.048</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TMEM163</td>
+<td style="text-align: left;">0.455</td>
+<td style="text-align: left;">0.455</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">TMEM164</td>
+<td style="text-align: left;">0.667</td>
+<td style="text-align: left;">0.596</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ZNF25</td>
+<td style="text-align: left;">1.384</td>
+<td style="text-align: left;">1.384</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AC034159.2</td>
+<td style="text-align: left;">-0.049</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AC133065.2</td>
+<td style="text-align: left;">-0.238</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AKR1B10</td>
+<td style="text-align: left;">-0.183</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DAXX</td>
+<td style="text-align: left;">0.344</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">FBXO6</td>
+<td style="text-align: left;">-1.236</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">NT5E</td>
+<td style="text-align: left;">-0.258</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PPIB</td>
+<td style="text-align: left;">-0.89</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">PSME2</td>
+<td style="text-align: left;">0.127</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">STX7</td>
+<td style="text-align: left;">0.321</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TPMT</td>
+<td style="text-align: left;">-0.85</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CYRIA</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">2.298</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">HNRNPC</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">0.021</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">NFKB2</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">1.984</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">PRR32</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">0.171</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PSME2P2</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">0.328</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">PTPN18</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">1.013</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">RIOX1</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">1.114</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">RPLP1</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">2.18</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">STXBP1</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">1.221</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TMEM223</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">1.421</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>kirc_fixedCuts_comp <span class="sc">%&gt;%</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(method, opt_cuts) <span class="sc">%&gt;%</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">cuts_est_selected =</span> <span class="fu">list</span>(<span class="fu">unlist</span>(opt_cuts)[<span class="sc">!</span> <span class="fu">is.na</span>(<span class="fu">unlist</span>(opt_cuts))])) <span class="sc">%&gt;%</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  ungroup <span class="sc">%&gt;%</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest_longer</span>(cuts_est_selected) <span class="sc">%&gt;%</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">ind_tmp =</span> <span class="fu">gregexpr</span>(<span class="st">"_ENSG"</span>, cuts_est_selected_id)[[<span class="dv">1</span>]][<span class="dv">1</span>] <span class="sc">-</span> <span class="dv">1</span>,</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">gene =</span> <span class="fu">substr</span>(cuts_est_selected_id, <span class="dv">1</span>, ind_tmp)) <span class="sc">%&gt;%</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(method, gene) <span class="sc">%&gt;%</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">reframe</span>(<span class="at">cuts =</span> <span class="fu">paste0</span>(<span class="fu">sort</span>(<span class="fu">round</span>(cuts_est_selected, <span class="dv">3</span>)), <span class="at">collapse =</span> <span class="st">" , "</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">id_cols =</span> gene,</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>              <span class="at">names_from =</span> method,</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>              <span class="at">values_from =</span> cuts) <span class="sc">%&gt;%</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">n_bini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(biniLasso)) <span class="sc">*</span> <span class="fu">str_count</span>(biniLasso, <span class="st">","</span>),</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>         <span class="at">n_Sbini =</span> <span class="fu">as.numeric</span>(<span class="sc">!</span> <span class="fu">is.na</span>(miniLasso)) <span class="sc">*</span> <span class="fu">str_count</span>(miniLasso, <span class="st">","</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>  ungroup <span class="sc">%&gt;%</span></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(n_bini), <span class="fu">desc</span>(n_Sbini)) <span class="sc">%&gt;%</span></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(gene, biniLasso, miniLasso) <span class="sc">%&gt;%</span></span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">Caption =</span> <span class="st">"Optimal cut-points found by different methods for the KIRC daatset"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table caption-top table-sm table-striped small" data-quarto-postprocess="true">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">gene</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">biniLasso</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">miniLasso</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">DLGAP1_AS2</td>
+<td style="text-align: left;">-0.162 , 0.229</td>
+<td style="text-align: left;">0.55</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MBOAT7</td>
+<td style="text-align: left;">-0.112 , 0.508</td>
+<td style="text-align: left;">0.508</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CYP3A7</td>
+<td style="text-align: left;">-0.555 , 0.043</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">RORA</td>
+<td style="text-align: left;">-0.446 , 0.183</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SORBS2</td>
+<td style="text-align: left;">-0.656 , -0.247</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ANAPC7</td>
+<td style="text-align: left;">0.423</td>
+<td style="text-align: left;">0.423</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AR</td>
+<td style="text-align: left;">-0.45</td>
+<td style="text-align: left;">0.693</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CARS1</td>
+<td style="text-align: left;">0.25</td>
+<td style="text-align: left;">0.25</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CUBN</td>
+<td style="text-align: left;">0.655</td>
+<td style="text-align: left;">0.655</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">EIF4EBP2</td>
+<td style="text-align: left;">0.338</td>
+<td style="text-align: left;">0.407</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">HJURP</td>
+<td style="text-align: left;">0.186</td>
+<td style="text-align: left;">0.186</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">IL4</td>
+<td style="text-align: left;">1.392</td>
+<td style="text-align: left;">1.392</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">IMPDH1</td>
+<td style="text-align: left;">1.961</td>
+<td style="text-align: left;">1.577</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SGCB</td>
+<td style="text-align: left;">0.199</td>
+<td style="text-align: left;">0.199</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SLC2A9</td>
+<td style="text-align: left;">-0.066</td>
+<td style="text-align: left;">-0.066</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">TXLNA</td>
+<td style="text-align: left;">-0.045</td>
+<td style="text-align: left;">0.184</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">USB1</td>
+<td style="text-align: left;">0.493</td>
+<td style="text-align: left;">0.331</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">AC080129.2</td>
+<td style="text-align: left;">1.218</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">AL118508.2</td>
+<td style="text-align: left;">0.179</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CRYZ</td>
+<td style="text-align: left;">0.736</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">CYP3A7_CYP3A51P</td>
+<td style="text-align: left;">-0.041</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">DONSON</td>
+<td style="text-align: left;">0.104</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DVL3</td>
+<td style="text-align: left;">0.339</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LIN54</td>
+<td style="text-align: left;">-0.284</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MGAT2P1</td>
+<td style="text-align: left;">4.22</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PTPRB</td>
+<td style="text-align: left;">-0.76</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">PURA</td>
+<td style="text-align: left;">0.208</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SNORD100</td>
+<td style="text-align: left;">-0.11</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SPTBN1</td>
+<td style="text-align: left;">-0.066</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">TFEC</td>
+<td style="text-align: left;">-0.246</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">TRIM27</td>
+<td style="text-align: left;">0.091</td>
+<td style="text-align: left;">NA</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CKAP4</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">1.294</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">HES7</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: left;">2.896</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<section id="compare-models-performance-1" class="level3" data-number="5.1">
+<h3 data-number="5.1" class="anchored" data-anchor-id="compare-models-performance-1"><span class="header-section-number">5.1</span> Compare models’ performance:</h3>
+<p>The final part summarizes the main outcomes of the vignette and presents concise comparison tables for the GBM, BRCA, and KIRC datasets. The tables show the detected cut-points across biniLasso, miniLasso, and Binacox, confirming that the proposed cumulative binarization and uniLasso regularization result in models that are both interpretable and computationally efficient. The findings in this section are consistent with the simulation and real-data results presented in the main article, demonstrating the practical advantages of biniLasso and miniLasso for high-dimensional survival analysis.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>gbm_fixedCuts_comp <span class="sc">%&gt;%</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(method, opt_cuts) <span class="sc">%&gt;%</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(method) <span class="sc">%&gt;%</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest_longer</span>(opt_cuts) <span class="sc">%&gt;%</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="st">`</span><span class="at">n-cuts</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sum</span>(<span class="sc">!</span> <span class="fu">is.na</span>(<span class="fu">unlist</span>(opt_cuts)))) <span class="sc">%&gt;%</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(method, <span class="st">`</span><span class="at">n-cuts</span><span class="st">`</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">do</span>(<span class="at">gbm_biniFit =</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>       <span class="fu">list</span>(<span class="fu">biniFit</span>(<span class="at">data =</span> gbm_data_fnl,</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>               <span class="at">optCuts =</span> .,</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>               <span class="at">y =</span> <span class="fu">Surv</span>(gbm_data_fnl<span class="sc">$</span>tte, gbm_data_fnl<span class="sc">$</span>vital_status),</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>               <span class="at">family =</span> <span class="st">"cox"</span>,</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_cuts =</span> <span class="st">"opt_cuts"</span>,</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_x =</span> <span class="st">"opt_cuts_id"</span>)<span class="sc">$</span>fit),</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>     <span class="at">gbm_bini_dataFit =</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>       <span class="fu">list</span>(<span class="fu">biniFit</span>(<span class="at">data =</span> gbm_data_fnl,</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>               <span class="at">optCuts =</span> .,</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>               <span class="at">y =</span> <span class="fu">Surv</span>(gbm_data_fnl<span class="sc">$</span>tte, gbm_data_fnl<span class="sc">$</span>vital_status),</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>               <span class="at">family =</span> <span class="st">"cox"</span>,</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_cuts =</span> <span class="st">"opt_cuts"</span>,</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_x =</span> <span class="st">"opt_cuts_id"</span>)<span class="sc">$</span>dataFit)) <span class="sc">%&gt;%</span></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">AIC =</span> <span class="fu">round</span>(<span class="fu">AIC</span>(gbm_biniFit[[<span class="dv">1</span>]]), <span class="dv">0</span>),</span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>         <span class="at">IBS =</span> <span class="fu">ibs</span>(<span class="fu">pec</span>(<span class="fu">list</span>(<span class="at">Cox =</span> gbm_biniFit[[<span class="dv">1</span>]]),</span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>                       <span class="fu">Hist</span>(time, event) <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>                       <span class="at">data =</span> gbm_bini_dataFit[[<span class="dv">1</span>]],</span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>                       <span class="at">verbose =</span> F))[<span class="dv">2</span>, <span class="dv">1</span>],</span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>         <span class="st">`</span><span class="at">C-index</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">paste0</span>(<span class="fu">round</span>(<span class="fu">concordance</span>(gbm_biniFit[[<span class="dv">1</span>]])<span class="sc">$</span>concordance, <span class="dv">3</span>),</span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>                            <span class="st">" ("</span>, <span class="fu">round</span>(<span class="fu">sqrt</span>(<span class="fu">concordance</span>(gbm_biniFit[[<span class="dv">1</span>]])<span class="sc">$</span>var), <span class="dv">3</span>),</span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>                            <span class="st">")"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a>  ungroup <span class="sc">%&gt;%</span></span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Dataset =</span> <span class="st">"GBM"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">relocate</span>(Dataset, <span class="at">.before =</span> <span class="st">"method"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">!</span> <span class="fu">c</span>(gbm_biniFit, gbm_bini_dataFit)) <span class="sc">%&gt;%</span></span>
+<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>,</span>
+<span id="cb16-35"><a href="#cb16-35" aria-hidden="true" tabindex="-1"></a>        <span class="at">Caption =</span> <span class="st">"Compare AIC of fitted Cox models by using detected optimal cut-points - GBM dataset"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb16-36"><a href="#cb16-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table caption-top table-sm table-striped small" data-quarto-postprocess="true">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">Dataset</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">method</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">n-cuts</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">AIC</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">IBS</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">C-index</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">GBM</td>
+<td style="text-align: left;">biniLasso</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">2801</td>
+<td style="text-align: right;">0.034</td>
+<td style="text-align: left;">0.777 (0.015)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">GBM</td>
+<td style="text-align: left;">miniLasso</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">2806</td>
+<td style="text-align: right;">0.037</td>
+<td style="text-align: left;">0.777 (0.015)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>brca_fixedCuts_comp <span class="sc">%&gt;%</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(method, opt_cuts) <span class="sc">%&gt;%</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(method) <span class="sc">%&gt;%</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest_longer</span>(opt_cuts) <span class="sc">%&gt;%</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="st">`</span><span class="at">n-cuts</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sum</span>(<span class="sc">!</span> <span class="fu">is.na</span>(<span class="fu">unlist</span>(opt_cuts)))) <span class="sc">%&gt;%</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(method, <span class="st">`</span><span class="at">n-cuts</span><span class="st">`</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">do</span>(<span class="at">brca_biniFit =</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>       <span class="fu">list</span>(<span class="fu">biniFit</span>(<span class="at">data =</span> brca_data_fnl,</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>               <span class="at">optCuts =</span> .,</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>               <span class="at">y =</span> <span class="fu">Surv</span>(brca_data_fnl<span class="sc">$</span>tte, brca_data_fnl<span class="sc">$</span>vital_status),</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>               <span class="at">family =</span> <span class="st">"cox"</span>,</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_cuts =</span> <span class="st">"opt_cuts"</span>,</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_x =</span> <span class="st">"opt_cuts_id"</span>)<span class="sc">$</span>fit),</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>     <span class="at">brca_bini_dataFit =</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>       <span class="fu">list</span>(<span class="fu">biniFit</span>(<span class="at">data =</span> brca_data_fnl,</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>               <span class="at">optCuts =</span> .,</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>               <span class="at">y =</span> <span class="fu">Surv</span>(brca_data_fnl<span class="sc">$</span>tte, brca_data_fnl<span class="sc">$</span>vital_status),</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>               <span class="at">family =</span> <span class="st">"cox"</span>,</span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_cuts =</span> <span class="st">"opt_cuts"</span>,</span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_x =</span> <span class="st">"opt_cuts_id"</span>)<span class="sc">$</span>dataFit)) <span class="sc">%&gt;%</span></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">AIC =</span> <span class="fu">round</span>(<span class="fu">AIC</span>(brca_biniFit[[<span class="dv">1</span>]]), <span class="dv">0</span>),</span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>         <span class="at">IBS =</span> <span class="fu">ibs</span>(<span class="fu">pec</span>(<span class="fu">list</span>(<span class="at">Cox =</span> brca_biniFit[[<span class="dv">1</span>]]),</span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>                       <span class="fu">Hist</span>(time, event) <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>                       <span class="at">data =</span> brca_bini_dataFit[[<span class="dv">1</span>]],</span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a>                       <span class="at">verbose =</span> F))[<span class="dv">2</span>, <span class="dv">1</span>],</span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a>         <span class="st">`</span><span class="at">C-index</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">paste0</span>(<span class="fu">round</span>(<span class="fu">concordance</span>(brca_biniFit[[<span class="dv">1</span>]])<span class="sc">$</span>concordance, <span class="dv">3</span>),</span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a>                            <span class="st">" ("</span>, <span class="fu">round</span>(<span class="fu">sqrt</span>(<span class="fu">concordance</span>(brca_biniFit[[<span class="dv">1</span>]])<span class="sc">$</span>var), <span class="dv">3</span>),</span>
+<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a>                            <span class="st">")"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a>  ungroup <span class="sc">%&gt;%</span></span>
+<span id="cb17-31"><a href="#cb17-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Dataset =</span> <span class="st">"BRCA"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">relocate</span>(Dataset, <span class="at">.before =</span> <span class="st">"method"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb17-33"><a href="#cb17-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">!</span> <span class="fu">c</span>(brca_biniFit, brca_bini_dataFit)) <span class="sc">%&gt;%</span></span>
+<span id="cb17-34"><a href="#cb17-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>,</span>
+<span id="cb17-35"><a href="#cb17-35" aria-hidden="true" tabindex="-1"></a>        <span class="at">Caption =</span> <span class="st">"Compare AIC of fitted Cox models by using detected optimal cut-points - BRCA dataset"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb17-36"><a href="#cb17-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table caption-top table-sm table-striped small" data-quarto-postprocess="true">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">Dataset</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">method</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">n-cuts</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">AIC</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">IBS</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">C-index</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">BRCA</td>
+<td style="text-align: left;">biniLasso</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">1956</td>
+<td style="text-align: right;">0.078</td>
+<td style="text-align: left;">0.786 (0.016)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">BRCA</td>
+<td style="text-align: left;">miniLasso</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">1958</td>
+<td style="text-align: right;">0.084</td>
+<td style="text-align: left;">0.783 (0.016)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>kirc_fixedCuts_comp <span class="sc">%&gt;%</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(method, opt_cuts) <span class="sc">%&gt;%</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(method) <span class="sc">%&gt;%</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest_longer</span>(opt_cuts) <span class="sc">%&gt;%</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="st">`</span><span class="at">n-cuts</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sum</span>(<span class="sc">!</span> <span class="fu">is.na</span>(<span class="fu">unlist</span>(opt_cuts)))) <span class="sc">%&gt;%</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(method, <span class="st">`</span><span class="at">n-cuts</span><span class="st">`</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">do</span>(<span class="at">kirc_biniFit =</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>       <span class="fu">list</span>(<span class="fu">biniFit</span>(<span class="at">data =</span> kirc_data_fnl,</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>               <span class="at">optCuts =</span> .,</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>               <span class="at">y =</span> <span class="fu">Surv</span>(kirc_data_fnl<span class="sc">$</span>tte, kirc_data_fnl<span class="sc">$</span>vital_status),</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>               <span class="at">family =</span> <span class="st">"cox"</span>,</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_cuts =</span> <span class="st">"opt_cuts"</span>,</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_x =</span> <span class="st">"opt_cuts_id"</span>)<span class="sc">$</span>fit),</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>     <span class="at">kirc_bini_dataFit =</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>       <span class="fu">list</span>(<span class="fu">biniFit</span>(<span class="at">data =</span> kirc_data_fnl,</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>               <span class="at">optCuts =</span> .,</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>               <span class="at">y =</span> <span class="fu">Surv</span>(kirc_data_fnl<span class="sc">$</span>tte, kirc_data_fnl<span class="sc">$</span>vital_status),</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>               <span class="at">family =</span> <span class="st">"cox"</span>,</span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_cuts =</span> <span class="st">"opt_cuts"</span>,</span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>               <span class="at">col_x =</span> <span class="st">"opt_cuts_id"</span>)<span class="sc">$</span>dataFit)) <span class="sc">%&gt;%</span></span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>  rowwise <span class="sc">%&gt;%</span></span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">AIC =</span> <span class="fu">round</span>(<span class="fu">AIC</span>(kirc_biniFit[[<span class="dv">1</span>]]), <span class="dv">0</span>),</span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>         <span class="at">IBS =</span> <span class="fu">ibs</span>(<span class="fu">pec</span>(<span class="fu">list</span>(<span class="at">Cox =</span> kirc_biniFit[[<span class="dv">1</span>]]),</span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>                       <span class="fu">Hist</span>(time, event) <span class="sc">~</span> <span class="dv">1</span>,</span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>                       <span class="at">data =</span> kirc_bini_dataFit[[<span class="dv">1</span>]],</span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a>                       <span class="at">verbose =</span> F))[<span class="dv">2</span>, <span class="dv">1</span>],</span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a>         <span class="st">`</span><span class="at">C-index</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">paste0</span>(<span class="fu">round</span>(<span class="fu">concordance</span>(kirc_biniFit[[<span class="dv">1</span>]])<span class="sc">$</span>concordance, <span class="dv">3</span>),</span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a>                            <span class="st">" ("</span>, <span class="fu">round</span>(<span class="fu">sqrt</span>(<span class="fu">concordance</span>(kirc_biniFit[[<span class="dv">1</span>]])<span class="sc">$</span>var), <span class="dv">3</span>),</span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a>                            <span class="st">")"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a>  ungroup <span class="sc">%&gt;%</span></span>
+<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Dataset =</span> <span class="st">"KIRC"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">relocate</span>(Dataset, <span class="at">.before =</span> <span class="st">"method"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">!</span> <span class="fu">c</span>(kirc_biniFit, kirc_bini_dataFit)) <span class="sc">%&gt;%</span></span>
+<span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>,</span>
+<span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a>        <span class="at">Caption =</span> <span class="st">"Compare AIC of fitted Cox models by using detected optimal cut-points - KIRC dataset"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable_styling</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table caption-top table-sm table-striped small" data-quarto-postprocess="true">
+<thead>
+<tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">Dataset</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">method</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">n-cuts</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">AIC</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">IBS</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">C-index</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">KIRC</td>
+<td style="text-align: left;">biniLasso</td>
+<td style="text-align: right;">36</td>
+<td style="text-align: right;">2081</td>
+<td style="text-align: right;">0.119</td>
+<td style="text-align: left;">0.785 (0.016)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">KIRC</td>
+<td style="text-align: left;">miniLasso</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">2070</td>
+<td style="text-align: right;">0.155</td>
+<td style="text-align: left;">0.758 (0.017)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
